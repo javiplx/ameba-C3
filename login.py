@@ -14,7 +14,7 @@
 import database
 
 from mod_python import apache
-from mod_python import Session
+from mod_python import Session , Cookie
 
 
 default_session_timeout = 60
@@ -69,16 +69,18 @@ def authenhandler ( req ) :
             req.status = apache.HTTP_UNAUTHORIZED
             return apache.DONE
 
-    # FIXME : Implement session based authentication. Does require explicit declaration in apacheconf ?
+
     sess = Session.Session( req )
     if sess.is_new() :
-        # Proper expiration time is not set on the cookie, even specifying at instantiation
-        sess.set_timeout( default_session_timeout )
         if not req.user :
             sess.invalidate()
-            req.log_error( "authenhandler : Trying to access with an obsolete session" )
+            cookies = Cookie.get_cookies( req )
+            if cookies.get( "pysid" ) :
+                req.log_error( "authenhandler : Trying to access with an obsolete session %s" % cookies["pysid"] )
             req.status = apache.HTTP_UNAUTHORIZED
             return apache.DONE
+        # NOTE : proper expiration time is not set on the cookie
+        sess.set_timeout( default_session_timeout )
         sess['UUID'] = req.user
         sess.save()
     else :
@@ -94,7 +96,7 @@ def authenhandler ( req ) :
             req.log_error( "authenhandler : Setting user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
             req.user = sess['UUID']
 
-    # NOTE : Stopping here with DONE will not work, so we require the content handler phase
+    # NOTE : Stopping here with DONE will not work, so we require the content handler phase for login requests
     req.subprocess_env['sessid'] = sess.id()
 
     req.log_error( "authenhandler : Going auth with user '%s'" % req.user , apache.APLOG_INFO )
