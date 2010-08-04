@@ -11,14 +11,14 @@ commandfile = "/var/spool/nagios/cmd/nagios.cmd"
 
 node_template = """define host{
         use                     ameba-node
-        host_name               %(hostname)s%(random)s
+        host_name               %(hostname)s
         alias                   %(uuid)s
         address                 %(hostaddress)s
         }
 
 define service{
         use                             local-service
-        host_name                       %(hostname)s%(random)s
+        host_name                       %(hostname)s
         service_description             ameba updater
 	passive_checks_enabled		1
 	check_freshness			1
@@ -31,7 +31,7 @@ define service{
 group_template = """define hostgroup{
         hostgroup_name  %(distro)s
         alias           %(distro)s nodes
-        members         %(hostname)s%(random)s
+        members         %(hostname)s
         }
 """
 
@@ -41,7 +41,6 @@ def run ( uuid , dbvalues ) :
     _dbvalues.update( dbvalues )
 
     import time
-    _dbvalues['random'] = "-00"
 
     fname = os.path.join( cfg_dir , "%s.cfg" % uuid )
     # FIXME : Exception if exists? Is truncate is enough?
@@ -57,7 +56,7 @@ def run ( uuid , dbvalues ) :
         fd = open( fname )
         for line in fd.readlines() :
             if line.find( "members" ) != -1 :
-                outlines.append( line.replace( "\n" , " , %s%s" % ( _dbvalues['hostname'] , _dbvalues['random'] ) ) )
+                outlines.append( line.replace( "\n" , " , %s" % _dbvalues['hostname'] ) )
             else :
                 outlines.append( line[:-1] )
         fd.close()
