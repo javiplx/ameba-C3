@@ -16,6 +16,8 @@ import database
 from mod_python import apache
 from mod_python import Session , Cookie
 
+import os
+
 
 default_session_timeout = 60
 
@@ -101,4 +103,27 @@ def authenhandler ( req ) :
 
     req.log_error( "authenhandler : Going auth with user '%s'" % req.user , apache.APLOG_INFO )
     return apache.OK
+
+def authzhandler ( req ) :
+
+    db = database.get( database.dbtype )
+    node = db.get_node( req.user )
+    db.close()
+
+    if not node :
+        req.log_error( "authzhandler : stored session for nonexisting node %s" % req.user , apache.APLOG_EMERG )
+        sess = Session.Session( req )
+        sess.invalidate()
+        req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+        return apache.DONE
+
+    path , fname = os.path.split( req.uri )
+    channel = os.path.basename( path )
+
+    if node.get('channels') == '*' or channel in node.get('channels').split() :
+        req.log_error( "authzhandler : granted access to '%s' from %s for user '%s'" % ( channel , node.get('channels') , req.user ) , apache.APLOG_INFO )
+        return apache.OK
+
+    req.log_error( "authzhandler : channel %s not authorized for %s" % ( channel , req.user ) )
+    return apache.HTTP_UNAUTHORIZED
 
