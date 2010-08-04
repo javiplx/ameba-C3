@@ -83,7 +83,10 @@ class Database :
         if password is None :
             return False
 
-        record = self.retrieve( uuid )
+        try :
+            record = self.retrieve( uuid )
+        except KeyNotFound , ex :
+            return False 
 
         if record.get( 'type' ) == "user" and record.get( 'password' ) == password :
             return True
@@ -95,7 +98,10 @@ class Database :
 
     def get_user_group( self , uuid ) :
 
-        record = self.retrieve( uuid )
+        try :
+            record = self.retrieve( uuid )
+        except KeyNotFound , ex :
+            return False 
 
         if record.get( 'type' ) == "user" :
             return record.get( 'group' )
@@ -132,7 +138,10 @@ class Database :
 
     def get_node( self , uuid ) :
 
-        record = self.retrieve( uuid )
+        try :
+            record = self.retrieve( uuid )
+        except KeyNotFound , ex :
+            return False 
 
         if record.get( 'type' ) == "node" :
             return record
