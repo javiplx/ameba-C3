@@ -1,0 +1,36 @@
+
+AmebaC3 data model
+==================
+
+* marks mandatory fields
+? marks cuestioned mandatory fields
+i secondary indexes
+
+Common fields
+-------------
+ - *  type , word enumeration ( user , node )
+ -    registration_by , word uuid ( __init__ for initialization , __self__ for self registering with aupd )
+ -  i registration_date , GMT tstamp
+ -  i registration_update , GMT tstamp
+
+Users
+-----
+ - *  password , string
+ -    group , word
+ -    username , word
+
+Nodes
+-----
+ - *  distro , word
+ -    channels , string
+ - ?i hostname , string
+ -  i hostaddress , string (FIXME : convert to number)
+
+ Field whith ssh key or similar identidication under evaluation
+
+
+NOTES
+-----
+
+change name 'password' to 'authtoken'
+
