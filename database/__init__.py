@@ -6,7 +6,7 @@ import os
 
 
 # FIXME : Replace hardcoded values with variables from a .ini file
-dbroot = "/tmp/ameba"#C3"
+dbroot = "/var/lib/amebaC3"
 dbname = "ameba"
 dbtype = "fs"
 
