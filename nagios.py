@@ -4,7 +4,6 @@ import os
 
 restart_allowed = True # [%lu] RESTART_PROGRAM
 # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<description>;<return_code>;<plugin_output>
-# [<timestamp>] PROCESS_HOST_CHECK_RESULT;<host_name>;<host_status>;<plugin_output>
 
 cfg_dir = "/etc/nagios/ameba"
 commandfile = "/var/spool/nagios/cmd/nagios.cmd"
@@ -73,4 +72,12 @@ def run ( uuid , dbvalues ) :
         fd = open( commandfile , 'a' )
         fd.write( "[%lu] RESTART_PROGRAM\n" % time.time() )
         fd.close()
+
+def nodealive ( uuid , sess ) :
+
+    import time
+
+    fd = open( commandfile , 'a' )
+    fd.write( "[%lu] PROCESS_HOST_CHECK_RESULT;%s;UP;Ameba C3 - Logged in\n" % ( time.time() , sess['HOSTNAME'] ) )
+    fd.close()
 

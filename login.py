@@ -13,6 +13,8 @@
 
 import database
 
+import nagios
+
 from mod_python import apache
 from mod_python import Session , Cookie
 
@@ -25,7 +27,7 @@ default_session_timeout = 60
 # Allow sessions to be refreshed on every connection. Default is to refresh only when Authentication headers are included
 allow_session_refresh = False
 
-# Match any channel if '*' or empty channel list 
+# Match any channel if '*' or undefined. Empty channel list disables access
 allow_wildcard_channel = True
 
 
@@ -88,10 +90,15 @@ def authenhandler ( req ) :
                 req.log_error( "authenhandler : Trying to access with an obsolete session %s" % cookies["pysid"] )
             req.status = apache.HTTP_UNAUTHORIZED
             return apache.DONE
+        db = database.get( database.dbtype )
+        dbvalues = db.get_node( req.user )
+        db.close()
         # NOTE : proper expiration time is not set on the cookie
         sess.set_timeout( default_session_timeout )
         sess['UUID'] = req.user
+        sess['HOSTNAME'] = dbvalues['hostname']
         sess.save()
+        nagios.nodealive( req.user , sess )
     else :
         if req.user :
             if req.user != sess['UUID'] :
@@ -101,6 +108,7 @@ def authenhandler ( req ) :
                 return apache.DONE
             req.log_error( "authenhandler : Requested reauthentication for '%s'" % req.user , apache.APLOG_INFO )
             sess.save()
+            nagios.nodealive( req.user , sess )
         else :
             req.log_error( "authenhandler : user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
             if allow_session_refresh :
