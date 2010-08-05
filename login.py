@@ -25,6 +25,9 @@ default_session_timeout = 60
 # Allow sessions to be refreshed on every connection. Default is to refresh only when Authentication headers are included
 allow_session_refresh = False
 
+# Match any channel if '*' or empty channel list 
+allow_wildcard_channel = True
+
 
 def handler ( req ) :
 
@@ -122,10 +125,13 @@ def authzhandler ( req ) :
         req.status = apache.HTTP_INTERNAL_SERVER_ERROR
         return apache.DONE
 
+    if allow_wildcard_channel and node.get('channels',"*") == "*" :
+        req.log_error( "authzhandler : granted wildcard for user '%s'" % req.user , apache.APLOG_INFO )
+        return apache.OK
+
     path , fname = os.path.split( req.uri )
     channel = os.path.basename( path )
-
-    if node.get('channels') == '*' or channel in node.get('channels').split() :
+    if channel in node.get('channels').split() :
         req.log_error( "authzhandler : granted access to '%s' from %s for user '%s'" % ( channel , node.get('channels') , req.user ) , apache.APLOG_INFO )
         return apache.OK
 
