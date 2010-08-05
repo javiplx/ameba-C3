@@ -19,7 +19,11 @@ from mod_python import Session , Cookie
 import os
 
 
+# Set the timeout in seconds for the login sessions
 default_session_timeout = 60
+
+# Allow sessions to be refreshed on every connection. Default is to refresh only when Authentication headers are included
+allow_session_refresh = False
 
 
 def handler ( req ) :
@@ -64,7 +68,7 @@ def authenhandler ( req ) :
                 req.log_error( "authenhandler : Malformed Authorization UUID %s" % uuid )
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
-            req.log_error( "authenhandler : user '%s' from headers" % uuid , apache.APLOG_INFO )
+            req.log_error( "authenhandler : user '%s' from UUID Authentication" % uuid , apache.APLOG_INFO )
             req.user = uuid
         else :
             req.log_error( "authenhandler : Unknown Authorization type '%s'" % type )
@@ -92,16 +96,17 @@ def authenhandler ( req ) :
                 req.log_error( "authenhandler : Requested reauthentication for '%s' with session from '%s'" % ( req.user , sess['UUID'] ) )
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
-            # FIXME : Refresh the session to increase timeout ???
             req.log_error( "authenhandler : Requested reauthentication for '%s'" % req.user , apache.APLOG_INFO )
+            sess.save()
         else :
-            req.log_error( "authenhandler : Setting user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
+            req.log_error( "authenhandler : user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
+            if allow_session_refresh :
+                sess.save()
             req.user = sess['UUID']
 
     # NOTE : Stopping here with DONE will not work, so we require the content handler phase for login requests
     req.subprocess_env['sessid'] = sess.id()
 
-    req.log_error( "authenhandler : Going auth with user '%s'" % req.user , apache.APLOG_INFO )
     return apache.OK
 
 def authzhandler ( req ) :
