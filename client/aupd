@@ -24,7 +24,7 @@ import urllib , urllib2
 import socket
 
 import subprocess
-import sys
+import sys , time
 
 usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
@@ -148,16 +148,18 @@ def login ( config , options , args ) :
     _url = config.get( 'registration' , 'url' )
     _uuid = config.get( 'registration' , 'uuid' )
 
-    sessid = __login ( _url , _uuid )
+    sessid , delay = __login ( _url , _uuid )
     if sessid :
         print "session id : %s" % sessid
+        if delay :
+            print "activated in %s seconds" % delay
 
 def __login ( url , uuid ) :
 
     req = urllib2.Request( "%s/login" % url )
     req.add_header( "Authorization" , "UUID %s" % uuid )
 
-    sessid = None
+    sessid , delay = None , 0
 
     try :
         res = urllib2.urlopen( req )
@@ -172,8 +174,9 @@ def __login ( url , uuid ) :
                 print line[:-1]
         else :
             sessid = firstline.split(None,1)[1]
+        delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
 
-    return sessid
+    return sessid , delay
 
 
 def logout ( config , options , args ) :
@@ -232,18 +235,22 @@ def pull ( config , options , args ) :
 
 def __pull ( url , uuid , cmds ) :
 
-    sessid = __login( url , uuid )
+    sessid , delay = __login( url , uuid )
 
     if not sessid : 
         print "ERROR : Login failed"
         return False
+
+    if delay : 
+        print "WARNING : sleping %s secs until session gets active" % delay
+        time.sleep( delay )
 
     for cmdline in cmds :
         null = open( "/dev/null" , 'a' )
         command = subprocess.Popen( cmdline.strip().split() , stdout=null , stderr=subprocess.STDOUT )
         null.close()
         command.wait()
-        sessid2 = __login( url , uuid )
+        sessid2 , delay = __login( url , uuid )
         if not sessid2 : 
             print "ERROR : Second login failed"
             return False
