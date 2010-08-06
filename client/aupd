@@ -218,30 +218,43 @@ def pull ( config , options , args ) :
     _url = config.get( 'registration' , 'url' )
     _uuid = config.get( 'registration' , 'uuid' )
 
-    __pull ( _url , _uuid )
+    if not config.has_section( 'pull' ) :
+        print "ERROR : pull section mising on configuration"
+        sys.exit(1)
 
-def __pull ( url , uuid ) :
+    if not config.has_option( 'pull' , 'commands' ) :
+        print "ERROR : No commands defined on pull section"
+        sys.exit(1)
+
+    _cmds = config.get( 'pull' , 'commands' )
+
+    __pull ( _url , _uuid , _cmds.split(',') )
+
+def __pull ( url , uuid , cmds ) :
 
     sessid = __login( url , uuid )
 
     if not sessid : 
-        print "Login failed"
+        print "ERROR : Login failed"
         return False
 
-    for cmdline in ( "opkg update" ,
-                     "opkg -y upgrade" ) :
+    for cmdline in cmds :
         null = open( "/dev/null" , 'a' )
-        command = subprocess.Popen( cmdline.split() , stdout=null , stderr=subprocess.STDOUT )
+        command = subprocess.Popen( cmdline.strip().split() , stdout=null , stderr=subprocess.STDOUT )
         null.close()
         command.wait()
-        if command.returncode != 0 :
-            break
+        sessid2 = __login( url , uuid )
+        if not sessid2 : 
+            print "ERROR : Second login failed"
+            return False
+            if command.returncode != 0 :
+                break
     else :
-        return __logout ( url , sessid )
+        return __logout ( url , sessid2 )
 
     print "ERROR : pull failed at %s" % cmdline
 
-    return __logout ( url , sessid , True )
+    return __logout ( url , sessid2 , True )
 
 
 command = { 'register':register ,
