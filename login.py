@@ -115,14 +115,14 @@ def authenhandler ( req ) :
             sess.save()
             nagios.nodealive( sess )
         else :
-            req.log_error( "authenhandler : user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
             if req.path_info == "/logoff" :
-                nagios.servicealive( sess )
+                nagios.servicealive( sess , req.headers_in.get( "X-AmebaStatus" , "OK" ) )
                 req.log_error( "authenhandler : user '%s' ended session %s" % ( sess['UUID'] , sess.id() ) , apache.APLOG_INFO )
                 req.user = sess['UUID']
                 req.subprocess_env['sessid'] = sess.id()
                 sess.invalidate()
                 return apache.OK
+            req.log_error( "authenhandler : user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
             if allow_session_refresh :
                 sess.save()
             req.user = sess['UUID']

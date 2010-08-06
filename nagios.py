@@ -74,10 +74,13 @@ def run ( uuid , dbvalues ) :
 
 def nodealive ( sess ) :
     fd = open( commandfile , 'a' )
-    fd.write( "[%lu] PROCESS_HOST_CHECK_RESULT;%s;UP;Ameba C3 - Logged in\n" % ( time.time() , sess['HOSTNAME'] ) )
+    fd.write( "[%lu] PROCESS_HOST_CHECK_RESULT;%s;0;Ameba C3 - Logged in\n" % ( time.time() , sess['HOSTNAME'] ) )
     fd.close()
 
-def servicealive( sess ) :
+def servicealive( sess , status ) :
     fd = open( commandfile , 'a' )
-    fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;OK;Ameba C3 - Up to date\n" % ( time.time() , sess['HOSTNAME'] ) )
+    if status == "OK" :
+        fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;0;Ameba C3 - Up to date\n" % ( time.time() , sess['HOSTNAME'] ) )
+    else :
+        fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;2;Ameba C3 - Failed update\n" % ( time.time() , sess['HOSTNAME'] ) )
     fd.close()

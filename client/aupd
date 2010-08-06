@@ -23,6 +23,7 @@ import optparse
 import urllib , urllib2
 import socket
 
+import subprocess
 import sys
 
 usage = """
@@ -188,12 +189,15 @@ def logout ( config , options , args ) :
 
     _url = config.get( 'registration' , 'url' )
 
-    return __logout ( _url , options.sessid )
+    if __logout ( _url , options.sessid ) :
+        print "session closed : %s" % options.sessid
 
-def __logout ( url , sessid ) :
+def __logout ( url , sessid , failed=False ) :
 
     req = urllib2.Request( "%s/logoff" % url )
     req.add_header( "Cookie" , "pysid=%s" % sessid )
+    if failed :
+        req.add_header( "X-AmebaStatus" , "FAIL" )
 
     try :
         res = urllib2.urlopen( req )
@@ -201,9 +205,9 @@ def __logout ( url , sessid ) :
         print "ERROR : %s" % res.msg
         print "".join( res.readlines() )
     else :
-        print "".join( res.readlines() )
+        return "".join( res.readlines() )
 
-    return True
+    return False
 
 def pull ( config , options , args ) :
 
@@ -216,15 +220,28 @@ def pull ( config , options , args ) :
 
     __pull ( _url , _uuid )
 
-def pull ( url , uuid ) :
+def __pull ( url , uuid ) :
 
     sessid = __login( url , uuid )
 
     if not sessid : 
-        print "Operation failed"
+        print "Login failed"
         return False
 
-    return __logout ( url , sessid )
+    for cmdline in ( "opkg update" ,
+                     "opkg -y upgrade" ) :
+        null = open( "/dev/null" , 'a' )
+        command = subprocess.Popen( cmdline.split() , stdout=null , stderr=subprocess.STDOUT )
+        null.close()
+        command.wait()
+        if command.returncode != 0 :
+            break
+    else :
+        return __logout ( url , sessid )
+
+    print "ERROR : pull failed at %s" % cmdline
+
+    return __logout ( url , sessid , True )
 
 
 command = { 'register':register ,
