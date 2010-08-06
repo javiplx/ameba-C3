@@ -79,5 +79,5 @@ def nodealive ( sess ) :
 
 def servicealive( sess ) :
     fd = open( commandfile , 'a' )
-    fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updated;OK;Ameba C3 - Up to date\n" % ( time.time() , sess['HOSTNAME'] ) )
+    fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;OK;Ameba C3 - Up to date\n" % ( time.time() , sess['HOSTNAME'] ) )
     fd.close()
