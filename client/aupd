@@ -33,7 +33,7 @@ usage = """
 \t%prog --sessid id logout
 """
 
-version = "%prog 0.2"
+version = "%prog 0.9"
 
 import os , glob
 
