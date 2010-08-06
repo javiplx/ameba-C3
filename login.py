@@ -39,7 +39,10 @@ def handler ( req ) :
         return apache.DONE
 
     req.content_type = "text/plain"
-    req.write( "ID %s" % req.subprocess_env['sessid'] )
+    if req.path_info == "/logoff" :
+        req.write( "Session ended : %s" % req.subprocess_env['sessid'] )
+    else :
+        req.write( "ID %s" % req.subprocess_env['sessid'] )
 
     return apache.OK
 
@@ -97,8 +100,10 @@ def authenhandler ( req ) :
         sess.set_timeout( default_session_timeout )
         sess['UUID'] = req.user
         sess['HOSTNAME'] = dbvalues['hostname']
+        sess['DISTRO'] = dbvalues['distro']
+        sess['CHANNELS'] = dbvalues.get( "channels" , "*" )
         sess.save()
-        nagios.nodealive( req.user , sess )
+        nagios.nodealive( sess )
     else :
         if req.user :
             if req.user != sess['UUID'] :
@@ -108,9 +113,16 @@ def authenhandler ( req ) :
                 return apache.DONE
             req.log_error( "authenhandler : Requested reauthentication for '%s'" % req.user , apache.APLOG_INFO )
             sess.save()
-            nagios.nodealive( req.user , sess )
+            nagios.nodealive( sess )
         else :
             req.log_error( "authenhandler : user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
+            if req.path_info == "/logoff" :
+                nagios.servicealive( sess )
+                req.log_error( "authenhandler : user '%s' ended session %s" % ( sess['UUID'] , sess.id() ) , apache.APLOG_INFO )
+                req.user = sess['UUID']
+                req.subprocess_env['sessid'] = sess.id()
+                sess.invalidate()
+                return apache.OK
             if allow_session_refresh :
                 sess.save()
             req.user = sess['UUID']

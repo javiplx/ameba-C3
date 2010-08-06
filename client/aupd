@@ -27,6 +27,7 @@ import sys
 
 usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
+\t%prog pull
 \t%prog login
 """
 
@@ -159,10 +160,37 @@ def login ( config , options , args ) :
             sessid = firstline.split(None,1)
             print "session id : %s" % sessid[1]
 
+    return sessid[1]
+
+
+def logout ( config , options , args ) :
+
+    sessid = login( config , options , args )
+
+    if args :
+        parser.print_help()
+        sys.exit(1)
+
+    _url = config.get( 'registration' , 'url' )
+    _uuid = config.get( 'registration' , 'uuid' )
+
+    req = urllib2.Request( "%s/logoff" % _url )
+    req.add_header( "Cookie" , "pysid=%s" % sessid )
+
+    try :
+        res = urllib2.urlopen( req )
+    except urllib2.HTTPError , res :
+        print "ERROR : %s" % res.msg
+        print "".join( res.readlines() )
+    else :
+        print "".join( res.readlines() )
+
     return True
 
 
 command = { 'register':register ,
+            'pull':logout ,
+            'logout':logout ,
             'login':login
             }
 

@@ -2,8 +2,7 @@
 import os
 
 
-restart_allowed = True # [%lu] RESTART_PROGRAM
-# [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<description>;<return_code>;<plugin_output>
+restart_allowed = True
 
 cfg_dir = "/etc/nagios/ameba"
 commandfile = "/var/spool/nagios/cmd/nagios.cmd"
@@ -34,12 +33,12 @@ group_template = """define hostgroup{
         }
 """
 
+import time
+
 def run ( uuid , dbvalues ) :
 
     _dbvalues = { 'uuid':uuid }
     _dbvalues.update( dbvalues )
-
-    import time
 
     fname = os.path.join( cfg_dir , "%s.cfg" % uuid )
     # FIXME : Exception if exists? Is truncate is enough?
@@ -73,11 +72,12 @@ def run ( uuid , dbvalues ) :
         fd.write( "[%lu] RESTART_PROGRAM\n" % time.time() )
         fd.close()
 
-def nodealive ( uuid , sess ) :
-
-    import time
-
+def nodealive ( sess ) :
     fd = open( commandfile , 'a' )
     fd.write( "[%lu] PROCESS_HOST_CHECK_RESULT;%s;UP;Ameba C3 - Logged in\n" % ( time.time() , sess['HOSTNAME'] ) )
     fd.close()
 
+def servicealive( sess ) :
+    fd = open( commandfile , 'a' )
+    fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updated;OK;Ameba C3 - Up to date\n" % ( time.time() , sess['HOSTNAME'] ) )
+    fd.close()
