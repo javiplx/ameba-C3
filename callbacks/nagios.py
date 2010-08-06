@@ -1,0 +1,108 @@
+
+# Copyright (C) 2010 Javier Palacios
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License Version 2
+# as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+
+
+import callbacks
+
+import time
+import os
+
+restart_allowed = True
+
+cfg_dir = "/etc/nagios/ameba"
+commandfile = "/var/spool/nagios/cmd/nagios.cmd"
+
+node_template = """define host{
+        use                     ameba-node
+        host_name               %(hostname)s
+        alias                   %(uuid)s
+        address                 %(hostaddress)s
+        }
+
+define service{
+        use                             local-service
+        host_name                       %(hostname)s
+        service_description             ameba updater
+	passive_checks_enabled		1
+	check_freshness			1
+	freshness_threshold		3600
+        active_checks_enabled           0
+        check_command                   check_freshness
+        }
+"""
+
+group_template = """define hostgroup{
+        hostgroup_name  %(distro)s
+        alias           %(distro)s nodes
+        members         %(hostname)s
+        }
+"""
+
+
+class NagiosAddHost ( callbacks.AbstractRegisterCallback ) :
+
+    def run ( self , uuid , dbvalues ) :
+
+        _dbvalues = { 'uuid':uuid }
+        _dbvalues.update( dbvalues )
+
+        fname = os.path.join( cfg_dir , "%s.cfg" % uuid )
+        # FIXME : Exception if exists? Is truncate is enough?
+        # FIXME : Permissions
+        fd = open( fname , 'w' )
+        fd.write( node_template % _dbvalues )
+        fd.close()
+
+        coso = []
+        fname = os.path.join( cfg_dir , "%s.cfg" % _dbvalues['distro'] )
+        if os.path.exists( fname ) :
+            outlines = []
+            fd = open( fname )
+            for line in fd.readlines() :
+                if line.find( "members" ) != -1 :
+                    outlines.append( line.replace( "\n" , " , %s" % _dbvalues['hostname'] ) )
+                else :
+                    outlines.append( line[:-1] )
+            fd.close()
+            fd = open( fname , 'w' )
+            fd.write( "\n".join( outlines ) )
+            fd.write( "\n" )
+            fd.close()
+        else :
+            fd = open( fname , 'w' )
+            fd.write( group_template % _dbvalues )
+            fd.close()
+
+        if restart_allowed :
+            fd = open( commandfile , 'a' )
+            fd.write( "[%lu] RESTART_PROGRAM\n" % time.time() )
+            fd.close()
+
+
+class NagiosHostUpdate ( callbacks.AbstractAliveCallback ) :
+
+    def run ( self , sess ) :
+        fd = open( commandfile , 'a' )
+        fd.write( "[%lu] PROCESS_HOST_CHECK_RESULT;%s;0;Ameba C3 - Logged in\n" % ( time.time() , sess['HOSTNAME'] ) )
+        fd.close()
+
+
+class NagiosServiceUpdate ( callbacks.AbstractUpdateCallback ) :
+
+    def run( self , sess , status ) :
+        fd = open( commandfile , 'a' )
+        if status == "OK" :
+            fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;0;Ameba C3 - Up to date\n" % ( time.time() , sess['HOSTNAME'] ) )
+        else :
+            fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;2;Ameba C3 - Failed update\n" % ( time.time() , sess['HOSTNAME'] ) )
+        fd.close()
+
