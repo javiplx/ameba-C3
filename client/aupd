@@ -29,9 +29,10 @@ usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
 \t%prog pull
 \t%prog login
+\t%prog --sessid id logout
 """
 
-version = "%prog 0.1"
+version = "%prog 0.2"
 
 import os , glob
 
@@ -110,8 +111,12 @@ def register ( config , options , args ) :
         sys.exit(1)
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
+    return __register( _url , data )
+
+def __register ( url , data ) :
+
     try :
-        res = urllib2.urlopen( "%s/register" % _url , urllib.urlencode( data ) )
+        res = urllib2.urlopen( "%s/register" % url , urllib.urlencode( data ) )
     except urllib2.HTTPError , res :
         print "ERROR : %s" % res.msg
         print "".join( res.readlines() )
@@ -125,8 +130,8 @@ def register ( config , options , args ) :
             if update_config :
                 if not config.has_section( 'registration' ) :
                     config.add_section( 'registration' )
-                config.set( 'registration' , 'url' , _url )
-                config.set( 'registration' , 'uuid' , _uuid )
+                config.set( 'registration' , 'url' , url )
+                config.set( 'registration' , 'uuid' , data['UUID'] )
 #FIXME : Verify user/permissions before writing config, or even calling urlopen
                 fd = open( configfile , 'w' )
                 config.write( fd )
@@ -142,8 +147,16 @@ def login ( config , options , args ) :
     _url = config.get( 'registration' , 'url' )
     _uuid = config.get( 'registration' , 'uuid' )
 
-    req = urllib2.Request( "%s/login" % _url )
-    req.add_header( "Authorization" , "UUID %s" % _uuid )
+    sessid = __login ( _url , _uuid )
+    if sessid :
+        print "session id : %s" % sessid
+
+def __login ( url , uuid ) :
+
+    req = urllib2.Request( "%s/login" % url )
+    req.add_header( "Authorization" , "UUID %s" % uuid )
+
+    sessid = None
 
     try :
         res = urllib2.urlopen( req )
@@ -157,24 +170,29 @@ def login ( config , options , args ) :
             for line in res.readlines() :
                 print line[:-1]
         else :
-            sessid = firstline.split(None,1)
-            print "session id : %s" % sessid[1]
+            sessid = firstline.split(None,1)[1]
 
-    return sessid[1]
+    return sessid
 
 
 def logout ( config , options , args ) :
 
-    sessid = login( config , options , args )
+    if not options.sessid :
+        print "ERROR : Missing parameters"
+        parser.print_help()
+        sys.exit(1)
 
     if args :
         parser.print_help()
         sys.exit(1)
 
     _url = config.get( 'registration' , 'url' )
-    _uuid = config.get( 'registration' , 'uuid' )
 
-    req = urllib2.Request( "%s/logoff" % _url )
+    return __logout ( _url , options.sessid )
+
+def __logout ( url , sessid ) :
+
+    req = urllib2.Request( "%s/logoff" % url )
     req.add_header( "Cookie" , "pysid=%s" % sessid )
 
     try :
@@ -187,9 +205,30 @@ def logout ( config , options , args ) :
 
     return True
 
+def pull ( config , options , args ) :
+
+    if args :
+        parser.print_help()
+        sys.exit(1)
+
+    _url = config.get( 'registration' , 'url' )
+    _uuid = config.get( 'registration' , 'uuid' )
+
+    __pull ( _url , _uuid )
+
+def pull ( url , uuid ) :
+
+    sessid = __login( url , uuid )
+
+    if not sessid : 
+        print "Operation failed"
+        return False
+
+    return __logout ( url , sessid )
+
 
 command = { 'register':register ,
-            'pull':logout ,
+            'pull':pull ,
             'logout':logout ,
             'login':login
             }
@@ -203,6 +242,9 @@ parser.add_option("--autogenerate",
 
 parser.add_option("--distro", dest="distro",
         help="Set primary channel")
+
+parser.add_option("--sessid", dest="sessid",
+        help="Set session ID")
 
 options , args = parser.parse_args()
 
