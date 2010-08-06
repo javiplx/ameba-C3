@@ -4,9 +4,9 @@
 import bsddb
 
 
-import database.baseclass
+import database
 
-class Database ( database.baseclass.Database ) :
+class Database ( database.Database ) :
 
     def __init__ ( self, dbdir , dbname ) :
 
@@ -27,7 +27,7 @@ class Database ( database.baseclass.Database ) :
         try :
             lock = self.dbenv.lock_get( self.dblock , uuid , bsddb.db.DB_LOCK_WRITE , flag )
         except bsddb.db.DBLockNotGrantedError , ex :
-            raise db_exception.RecordLocked(uuid)
+            raise database.RecordLocked(uuid)
         except :
             raise Exception( "Unexpected excepton" )
         return lock
@@ -45,7 +45,7 @@ class Database ( database.baseclass.Database ) :
         if db.has_key( uuid ) :
             db.close()
             self.lock_put(lock)
-            raise db_exception.KeyExists( uuid )
+            raise database.KeyExists( uuid )
 
         db[ uuid ] = self.serialize( dbvalues )
 
@@ -59,7 +59,7 @@ class Database ( database.baseclass.Database ) :
 
         if not db.has_key( uuid ) :
             db.close()
-            raise db_exception.KeyNotFound( uuid )
+            raise database.KeyNotFound( uuid )
 
         record = self.deserialize( db[uuid] )
 

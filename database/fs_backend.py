@@ -2,10 +2,11 @@
 import os
 
 
-import database.baseclass
+import database
+
 import time
 
-class Database ( database.baseclass.Database ) :
+class Database ( database.Database ) :
 
     def __init__ ( self, dbdir , dbname ) :
 
@@ -23,7 +24,7 @@ class Database ( database.baseclass.Database ) :
         lock = os.path.join( self.dbenv , ".%s" % uuid )
         if os.path.exists( lock ) :
             if flag : 
-                raise db_exception.RecordLocked(uuid)
+                raise database.RecordLocked(uuid)
             time.sleep( 0.01 )
             while os.path.exists( lock ) :
                 time.sleep( 0.01 )
@@ -42,7 +43,7 @@ class Database ( database.baseclass.Database ) :
 
         if os.path.exists( fname ) :
             self.lock_put(lock)
-            raise db_exception.KeyExists( uuid )
+            raise database.KeyExists( uuid )
 
         fd = open( fname , 'w' )
         fd.write( self.serialize( dbvalues ) )
@@ -55,7 +56,7 @@ class Database ( database.baseclass.Database ) :
         fname = os.path.join( self.dbenv , uuid )
 
         if not os.path.exists( fname ) :
-            raise db_exception.KeyNotFound( uuid )
+            raise database.KeyNotFound( uuid )
 
         fd = open( fname )
         record = self.deserialize( "".join( fd.readlines() ) )
