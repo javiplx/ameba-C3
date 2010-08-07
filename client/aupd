@@ -113,7 +113,16 @@ def register ( config , options , args ) :
         sys.exit(1)
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
-    return __register( _url , data )
+    if __register( _url , data ) and update_config :
+        if not config.has_section( 'registration' ) :
+            config.add_section( 'registration' )
+        config.set( 'registration' , 'url' , _url )
+        config.set( 'registration' , 'uuid' , _uuid )
+#FIXME : Verify user/permissions before writing config, or even calling urlopen
+        fd = open( configfile , 'w' )
+        config.write( fd )
+        fd.close()
+
 
 def __register ( url , data ) :
 
@@ -128,17 +137,9 @@ def __register ( url , data ) :
             print "WARNING : %s" % firstline
             for line in res.readlines() :
                 print line[:-1]
-        else :
-            if update_config :
-                if not config.has_section( 'registration' ) :
-                    config.add_section( 'registration' )
-                config.set( 'registration' , 'url' , url )
-                config.set( 'registration' , 'uuid' , data['UUID'] )
-#FIXME : Verify user/permissions before writing config, or even calling urlopen
-                fd = open( configfile , 'w' )
-                config.write( fd )
-                fd.close()
+        return True
 
+    return False
 
 def login ( config , options , args ) :
 
