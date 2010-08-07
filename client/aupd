@@ -31,6 +31,7 @@ usage = """
 \t%prog pull
 \t%prog login
 \t%prog --sessid id logout
+\t%prog loginout
 """
 
 version = "%prog 0.9"
@@ -250,24 +251,43 @@ def __pull ( url , uuid , cmds ) :
         command = subprocess.Popen( cmdline.strip().split() , stdout=null , stderr=subprocess.STDOUT )
         null.close()
         command.wait()
-        sessid2 , delay = __login( url , uuid )
-        if not sessid2 : 
-            print "ERROR : Second login failed"
-            return False
-            if command.returncode != 0 :
-                break
+        if command.returncode != 0 :
+            break
     else :
-        return __logout ( url , sessid2 )
+        return __loginout ( url , uuid )
 
     print "ERROR : pull failed at %s" % cmdline
 
-    return __logout ( url , sessid2 , True )
+    return __logout ( url , sessid , True )
+
+
+def loginout ( config , options , args ) :
+
+    if args :
+        parser.print_help()
+        sys.exit(1)
+
+    _url = config.get( 'registration' , 'url' )
+    _uuid = config.get( 'registration' , 'uuid' )
+
+    __loginout ( _url , _uuid )
+
+def __loginout ( url , uuid ) :
+
+    sessid , delay = __login( url , uuid )
+
+    if not sessid : 
+        print "ERROR : Login failed"
+        return False
+
+    return __logout ( url , sessid )
 
 
 command = { 'register':register ,
             'pull':pull ,
             'logout':logout ,
-            'login':login
+            'login':login ,
+            'loginout':loginout
             }
 
 parser = optparse.OptionParser(usage=usage, version=version)
