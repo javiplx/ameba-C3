@@ -140,11 +140,10 @@ class Database :
 
         try :
             record = self.retrieve( uuid )
+            if record.get( 'type' ) == "node" :
+                return record
         except KeyNotFound , ex :
-            return False 
-
-        if record.get( 'type' ) == "node" :
-            return record
+            pass
 
         return None
 
