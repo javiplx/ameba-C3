@@ -12,7 +12,7 @@
 # General Public License for more details.
 
 
-import client
+import amebaC3_client.client
 
 
 import ConfigParser
@@ -115,9 +115,9 @@ def register ( config , options , args ) :
         sys.exit(1)
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
-    if client.register( _url , data ) :
-        if client.has_errmsg() :
-            for msg in client.get_all_errmsg() :
+    if amebaC3_client.client.register( _url , data ) :
+        if amebaC3_client.client.has_errmsg() :
+            for msg in amebaC3_client.client.get_all_errmsg() :
                 print "WARNING : %s" % msg
         if update_config :
             if not config.has_section( 'registration' ) :
@@ -129,7 +129,7 @@ def register ( config , options , args ) :
             config.write( fd )
             fd.close()
     else :
-        for msg in client.get_all_errmsg() :
+        for msg in amebaC3_client.client.get_all_errmsg() :
             print "ERROR : %s" % msg
 
 
@@ -142,16 +142,16 @@ def login ( config , options , args ) :
     _url = config.get( 'registration' , 'url' )
     _uuid = config.get( 'registration' , 'uuid' )
 
-    sessid , delay = client.login ( _url , _uuid )
+    sessid , delay = amebaC3_client.client.login ( _url , _uuid )
     if sessid :
         print "session id : %s" % sessid
         if delay :
             print "activated in %s seconds" % delay
-        if client.has_errmsg() :
-            for msg in client.get_all_errmsg() :
+        if amebaC3_client.client.has_errmsg() :
+            for msg in amebaC3_client.client.get_all_errmsg() :
                 print "WARNING : %s" % msg
     else :
-        for msg in client.get_all_errmsg() :
+        for msg in amebaC3_client.client.get_all_errmsg() :
             print "ERROR : %s" % msg
 
 
@@ -168,13 +168,13 @@ def logout ( config , options , args ) :
 
     _url = config.get( 'registration' , 'url' )
 
-    if client.logout ( _url , options.sessid ) :
+    if amebaC3_client.client.logout ( _url , options.sessid ) :
         print "session closed : %s" % options.sessid
-        if client.has_errmsg() :
-            for msg in client.get_all_errmsg() :
+        if amebaC3_client.client.has_errmsg() :
+            for msg in amebaC3_client.client.get_all_errmsg() :
                 print "WARNING : %s" % msg
     else :
-        for msg in client.get_all_errmsg() :
+        for msg in amebaC3_client.client.get_all_errmsg() :
             print "ERROR : %s" % msg
 
 
@@ -202,15 +202,15 @@ def pull ( config , options , args ) :
 
     _cmds = config.get( 'pull' , 'commands' )
 
-    ret = client.pull ( _url , _uuid , _cmds.split(',') )
+    ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') )
     if ret :
         if process_msgs :
-            if client.has_errmsg() :
-                for msg in client.get_all_errmsg() :
+            if amebaC3_client.client.has_errmsg() :
+                for msg in amebaC3_client.client.get_all_errmsg() :
                     print "WARNING : %s" % msg
     else :
         if process_msgs :
-            for msg in client.get_all_errmsg() :
+            for msg in amebaC3_client.client.get_all_errmsg() :
                 print "ERROR : %s" % msg
 
     return ret
@@ -225,12 +225,12 @@ def loginout ( config , options , args ) :
     _url = config.get( 'registration' , 'url' )
     _uuid = config.get( 'registration' , 'uuid' )
 
-    if client.loginout ( _url , _uuid ) :
-        if client.has_errmsg() :
-            for msg in client.get_all_errmsg() :
+    if amebaC3_client.client.loginout ( _url , _uuid ) :
+        if amebaC3_client.client.has_errmsg() :
+            for msg in amebaC3_client.client.get_all_errmsg() :
                 print "WARNING : %s" % msg
     else :
-        for msg in client.get_all_errmsg() :
+        for msg in amebaC3_client.client.get_all_errmsg() :
             print "ERROR : %s" % msg
 
 
@@ -245,16 +245,16 @@ def __pulldaemon ( config , options , args , check_interval ) :
     ret = pull( config , options , list(args) )
     if ret :
         # NOTE : we just drop any warnings
-        client.get_all_errmsg()
+        amebaC3_client.client.get_all_errmsg()
     else :
         # NOTE : error reporting cannot be done via stdout
-        client.get_all_errmsg()
-        #for msg in client.get_all_errmsg() :
+        amebaC3_client.client.get_all_errmsg()
+        #for msg in amebaC3_client.client.get_all_errmsg() :
         #    print "ERROR : %s" % msg
     timerid = threading.Timer( check_interval , __pulldaemon , ( config , options , args , check_interval ) )
     timerid.start()
 
-import daemon
+import amebaC3_client.daemon
 
 def pulldaemon ( config , options , args ) :
 
@@ -275,7 +275,7 @@ def pulldaemon ( config , options , args ) :
         parser.print_help()
         sys.exit(1)
 
-    retcode = daemon.createDaemon()
+    retcode = amebaC3_client.daemon.createDaemon()
 
     args.append( "buffermsgs" )
     # NOTE : we create a timer instead of calling __pulldaemon to delay the initial pull
