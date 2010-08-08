@@ -15,11 +15,12 @@
 from distutils.core import setup
 
 setup(
-	name = "AmebaC3 updater" ,
+	name = "amebaC3_client" ,
 	version = "1.1" ,
 	description = "AmebaC3 update agent" ,
 	author = "Javier Palacios" ,
 	author_email = "javiplx@gmail.com" ,
+	url = "http://wiki.github.com/javiplx/ameba-C3" ,
 	scripts = [ "aupd" ] ,
 	package_dir = { 'amebaC3_client':"" } ,
 	packages = [ "amebaC3_client" ] ,
