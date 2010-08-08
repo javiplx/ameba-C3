@@ -39,10 +39,7 @@ def handler ( req ) :
         return apache.DONE
 
     req.content_type = "text/plain"
-    if req.path_info == "/logoff" :
-        req.write( "Session ended : %s" % req.subprocess_env['sessid'] )
-    else :
-        req.write( "ID %s" % req.subprocess_env['sessid'] )
+    req.write( "ID %s" % req.subprocess_env['sessid'] )
 
     return apache.OK
 

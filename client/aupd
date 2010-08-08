@@ -11,6 +11,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 
+
+import client
+
+
 import ConfigParser
 
 configfile = "/etc/aupd.conf"
@@ -18,13 +22,7 @@ configfile = "/etc/aupd.conf"
 config = ConfigParser.RawConfigParser()
 config.read( configfile )
 
-import optparse
-
-import urllib , urllib2
-import socket
-
-import subprocess
-import sys , time
+import sys
 
 usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
@@ -34,7 +32,8 @@ usage = """
 \t%prog loginout
 """
 
-version = "%prog 0.9"
+version = "%prog 1.0"
+
 
 import os , glob
 
@@ -61,7 +60,9 @@ def guess_distro ( ) :
         fd.close()
         return v
 
+
 import uuid
+import socket
 
 def register ( config , options , args ) :
 
@@ -113,33 +114,23 @@ def register ( config , options , args ) :
         sys.exit(1)
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
-    if __register( _url , data ) and update_config :
-        if not config.has_section( 'registration' ) :
-            config.add_section( 'registration' )
-        config.set( 'registration' , 'url' , _url )
-        config.set( 'registration' , 'uuid' , _uuid )
+    if client.register( _url , data ) :
+        if client.has_errmsg() :
+            for msg in client.get_all_errmsg() :
+                print "WARNING : %s" % msg
+        if update_config :
+            if not config.has_section( 'registration' ) :
+                config.add_section( 'registration' )
+            config.set( 'registration' , 'url' , _url )
+            config.set( 'registration' , 'uuid' , _uuid )
 #FIXME : Verify user/permissions before writing config, or even calling urlopen
-        fd = open( configfile , 'w' )
-        config.write( fd )
-        fd.close()
-
-
-def __register ( url , data ) :
-
-    try :
-        res = urllib2.urlopen( "%s/register" % url , urllib.urlencode( data ) )
-    except urllib2.HTTPError , res :
-        print "ERROR : %s" % res.msg
-        print "".join( res.readlines() )
+            fd = open( configfile , 'w' )
+            config.write( fd )
+            fd.close()
     else :
-        firstline = res.readline()
-        if firstline != "OK" :
-            print "WARNING : %s" % firstline
-            for line in res.readlines() :
-                print line[:-1]
-        return True
+        for msg in client.get_all_errmsg() :
+            print "ERROR : %s" % msg
 
-    return False
 
 def login ( config , options , args ) :
 
@@ -150,35 +141,17 @@ def login ( config , options , args ) :
     _url = config.get( 'registration' , 'url' )
     _uuid = config.get( 'registration' , 'uuid' )
 
-    sessid , delay = __login ( _url , _uuid )
+    sessid , delay = client.login ( _url , _uuid )
     if sessid :
         print "session id : %s" % sessid
         if delay :
             print "activated in %s seconds" % delay
-
-def __login ( url , uuid ) :
-
-    req = urllib2.Request( "%s/login" % url )
-    req.add_header( "Authorization" , "UUID %s" % uuid )
-
-    sessid , delay = None , 0
-
-    try :
-        res = urllib2.urlopen( req )
-    except urllib2.HTTPError , res :
-        print "ERROR : %s" % res.msg
-        print "".join( res.readlines() )
+        if client.has_errmsg() :
+            for msg in client.get_all_errmsg() :
+                print "WARNING : %s" % msg
     else :
-        firstline = res.readline()
-        if not firstline.startswith( "ID " ) :
-            print "WARNING : %s" % firstline
-            for line in res.readlines() :
-                print line[:-1]
-        else :
-            sessid = firstline.split(None,1)[1]
-        delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
-
-    return sessid , delay
+        for msg in client.get_all_errmsg() :
+            print "ERROR : %s" % msg
 
 
 def logout ( config , options , args ) :
@@ -194,25 +167,15 @@ def logout ( config , options , args ) :
 
     _url = config.get( 'registration' , 'url' )
 
-    if __logout ( _url , options.sessid ) :
+    if client.logout ( _url , options.sessid ) :
         print "session closed : %s" % options.sessid
-
-def __logout ( url , sessid , failed=False ) :
-
-    req = urllib2.Request( "%s/logoff" % url )
-    req.add_header( "Cookie" , "pysid=%s" % sessid )
-    if failed :
-        req.add_header( "X-AmebaStatus" , "FAIL" )
-
-    try :
-        res = urllib2.urlopen( req )
-    except urllib2.HTTPError , res :
-        print "ERROR : %s" % res.msg
-        print "".join( res.readlines() )
+        if client.has_errmsg() :
+            for msg in client.get_all_errmsg() :
+                print "WARNING : %s" % msg
     else :
-        return "".join( res.readlines() )
+        for msg in client.get_all_errmsg() :
+            print "ERROR : %s" % msg
 
-    return False
 
 def pull ( config , options , args ) :
 
@@ -233,33 +196,13 @@ def pull ( config , options , args ) :
 
     _cmds = config.get( 'pull' , 'commands' )
 
-    __pull ( _url , _uuid , _cmds.split(',') )
-
-def __pull ( url , uuid , cmds ) :
-
-    sessid , delay = __login( url , uuid )
-
-    if not sessid : 
-        print "ERROR : Login failed"
-        return False
-
-    if delay : 
-        print "WARNING : sleping %s secs until session gets active" % delay
-        time.sleep( delay )
-
-    for cmdline in cmds :
-        null = open( "/dev/null" , 'a' )
-        command = subprocess.Popen( cmdline.strip().split() , stdout=null , stderr=subprocess.STDOUT )
-        null.close()
-        command.wait()
-        if command.returncode != 0 :
-            break
+    if client.pull ( _url , _uuid , _cmds.split(',') ) :
+        if client.has_errmsg() :
+            for msg in client.get_all_errmsg() :
+                print "WARNING : %s" % msg
     else :
-        return __loginout ( url , uuid )
-
-    print "ERROR : pull failed at %s" % cmdline
-
-    return __logout ( url , sessid , True )
+        for msg in client.get_all_errmsg() :
+            print "ERROR : %s" % msg
 
 
 def loginout ( config , options , args ) :
@@ -271,17 +214,13 @@ def loginout ( config , options , args ) :
     _url = config.get( 'registration' , 'url' )
     _uuid = config.get( 'registration' , 'uuid' )
 
-    __loginout ( _url , _uuid )
-
-def __loginout ( url , uuid ) :
-
-    sessid , delay = __login( url , uuid )
-
-    if not sessid : 
-        print "ERROR : Login failed"
-        return False
-
-    return __logout ( url , sessid )
+    if client.loginout ( _url , _uuid ) :
+        if client.has_errmsg() :
+            for msg in client.get_all_errmsg() :
+                print "WARNING : %s" % msg
+    else :
+        for msg in client.get_all_errmsg() :
+            print "ERROR : %s" % msg
 
 
 command = { 'register':register ,
@@ -290,6 +229,8 @@ command = { 'register':register ,
             'login':login ,
             'loginout':loginout
             }
+
+import optparse
 
 parser = optparse.OptionParser(usage=usage, version=version)
 parser.set_defaults( autouuid=False )
