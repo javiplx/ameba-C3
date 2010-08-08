@@ -181,7 +181,7 @@ def logout ( config , options , args ) :
 def pull ( config , options , args ) :
 
     process_msgs = True
-    if args[0] == "buffermsgs" :
+    if args and args[0] == "buffermsgs" :
         args.pop(0)
         process_msgs = False
 
