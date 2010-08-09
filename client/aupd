@@ -26,7 +26,7 @@ import sys
 
 usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
-\t%prog [--check-interval seconds] pulldaemon
+\t%prog [--check-interval seconds] [--random-wait seconds] pulldaemon
 \t%prog pull
 \t%prog login
 \t%prog --sessid id logout
@@ -234,13 +234,13 @@ def loginout ( config , options , args ) :
             print "ERROR : %s" % msg
 
 
-#import time
+import random
 
 import threading
 
 timerid = None
 
-def __pulldaemon ( config , options , args , check_interval ) :
+def __pulldaemon ( config , options , args , check_interval , random_wait ) :
 
     ret = pull( config , options , list(args) )
     if ret :
@@ -251,7 +251,7 @@ def __pulldaemon ( config , options , args , check_interval ) :
         amebaC3_client.client.get_all_errmsg()
         #for msg in amebaC3_client.client.get_all_errmsg() :
         #    print "ERROR : %s" % msg
-    timerid = threading.Timer( check_interval , __pulldaemon , ( config , options , args , check_interval ) )
+    timerid = threading.Timer( check_interval + random_wait * random.random() , __pulldaemon , ( config , options , args , check_interval , random_wait ) )
     timerid.start()
 
 import amebaC3_client.daemon
@@ -271,6 +271,14 @@ def pulldaemon ( config , options , args ) :
         parser.print_help()
         sys.exit(1)
 
+    random_wait = 0
+
+    if config.has_option( 'pulldaemon' , 'random-wait' ) :
+        check_interval = config.getfloat( 'pulldaemon' , 'random-wait' )
+
+    if options.wait :
+        random_waitval = float(options.wait)
+
     if args :
         parser.print_help()
         sys.exit(1)
@@ -279,7 +287,7 @@ def pulldaemon ( config , options , args ) :
 
     args.append( "buffermsgs" )
     # NOTE : we create a timer instead of calling __pulldaemon to delay the initial pull
-    timerid = threading.Timer( check_interval , __pulldaemon , ( config , options , args , check_interval ) )
+    timerid = threading.Timer( check_interval + random_wait * random.random() , __pulldaemon , ( config , options , args , check_interval , random_wait ) )
     timerid.start()
 
 
@@ -309,6 +317,9 @@ parser.add_option("--sessid", dest="sessid",
 # FIXME : force value to float number, and remove coercion in call to time.sleep
 parser.add_option("--check-interval", dest="interval",
         help="Set time interval in seconds within checks")
+
+parser.add_option("--random-wait", dest="wait",
+        help="Set maximum random waiting time")
 
 options , args = parser.parse_args()
 
