@@ -26,8 +26,8 @@ import sys
 
 usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
-\t%prog [--check-interval seconds] [--random-wait seconds] pulldaemon
-\t%prog pull
+\t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] pulldaemon
+\t%prog [--check-only|--force-upgrade] pull
 \t%prog login
 \t%prog --sessid id logout
 \t%prog loginout
@@ -62,18 +62,25 @@ def guess_distro ( ) :
         return v
 
 
+#FIXME : Verify user/permissions before writing config, or even calling urlopen
+def store_config( config ) :
+    fd = open( configfile , 'w' )
+    config.write( fd )
+    fd.close()
+
+
 import uuid
 import socket
 
 def register ( config , options , args ) :
 
-    update_config = False
+    options.store = False
 
     _url = None
 
     if args :
         _url = args.pop(0)
-        update_config = True
+        options.store = True
 
     if config.has_option( 'registration' , 'url' ) :
         if _url :
@@ -85,7 +92,7 @@ def register ( config , options , args ) :
 
     if args :
         _uuid = args.pop(0)
-        update_config = True
+        options.store = True
 
     if _uuid and options.autouuid :
         print "ERROR : You should not give explicit UUID when requesting autogeneration"
@@ -119,15 +126,12 @@ def register ( config , options , args ) :
         if amebaC3_client.client.has_errmsg() :
             for msg in amebaC3_client.client.get_all_errmsg() :
                 print "WARNING : %s" % msg
-        if update_config :
+        if options.store :
             if not config.has_section( 'registration' ) :
                 config.add_section( 'registration' )
             config.set( 'registration' , 'url' , _url )
             config.set( 'registration' , 'uuid' , _uuid )
-#FIXME : Verify user/permissions before writing config, or even calling urlopen
-            fd = open( configfile , 'w' )
-            config.write( fd )
-            fd.close()
+            store_config( config )
     else :
         for msg in amebaC3_client.client.get_all_errmsg() :
             print "ERROR : %s" % msg
@@ -196,11 +200,21 @@ def pull ( config , options , args ) :
         print "ERROR : pull section mising on configuration"
         sys.exit(1)
 
-    if not config.has_option( 'pull' , 'commands' ) :
-        print "ERROR : No commands defined on pull section"
-        sys.exit(1)
+    if options.check_only is None :
+        if config.has_option( 'pull' , 'check-only' ) :
+            options.check_only = config.getboolean( 'pull' , 'check-only' )
 
-    _cmds = config.get( 'pull' , 'commands' )
+    if options.check_only :
+        if not config.has_option( 'pull' , 'check_cmds' ) :
+            print "ERROR : No check_cmds defined on pull section"
+            sys.exit(1)
+        _cmds = config.get( 'pull' , 'check_cmds' )
+    else :
+        if not config.has_option( 'pull' , 'update_cmds' ) :
+            print "ERROR : No update_cmds defined on pull section"
+            sys.exit(1)
+        _cmds = config.get( 'pull' , 'update_cmds' )
+
 
     ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') )
     if ret :
@@ -264,7 +278,7 @@ def pulldaemon ( config , options , args ) :
         check_interval = config.getfloat( 'pulldaemon' , 'check-interval' )
 
     if options.interval :
-        check_interval = float(options.interval)
+        check_interval = options.interval
 
     if check_interval is False :
         print "ERROR : Missing parameters"
@@ -277,12 +291,26 @@ def pulldaemon ( config , options , args ) :
         check_interval = config.getfloat( 'pulldaemon' , 'random-wait' )
 
     if options.wait :
-        random_waitval = float(options.wait)
+        random_wait = options.wait
 
     if args :
         parser.print_help()
         sys.exit(1)
 
+    if options.check_only is None :
+        if config.has_option( 'pulldaemon' , 'check-only' ) :
+            options.check_only = config.getboolean( 'pulldaemon' , 'check-only' )
+
+    if options.store :
+        if not config.has_section( 'pulldaemon' ) :
+            config.add_section( 'pulldaemon' )
+        if options.interval :
+            config.set( 'pulldaemon' , 'check-interval' , options.interval )
+        if options.wait :
+            config.set( 'pulldaemon' , 'random-wait' , options.wait )
+        store_config( config )
+
+    amebaC3_client.daemon.REDIRECT_TO = "/tmp/ameba.log"
     retcode = amebaC3_client.daemon.createDaemon()
 
     args.append( "buffermsgs" )
@@ -305,7 +333,7 @@ parser = optparse.OptionParser(usage=usage, version=version)
 parser.set_defaults( autouuid=False )
 
 parser.add_option("--autogenerate",
-        action="store_true", dest="autouuid",
+        action="store_true", dest="autouuid", default=False,
         help="Automatically generate a random UUID")
 
 parser.add_option("--distro", dest="distro",
@@ -314,12 +342,25 @@ parser.add_option("--distro", dest="distro",
 parser.add_option("--sessid", dest="sessid",
         help="Set session ID")
 
-# FIXME : force value to float number, and remove coercion in call to time.sleep
-parser.add_option("--check-interval", dest="interval",
+parser.add_option("--check-only",
+        action="store_true", dest="check_only",
+        help="Perform only a check for updates")
+
+parser.add_option("--force-upgrade",
+        action="store_false", dest="check_only",
+        help="Force a system upgrade")
+
+parser.add_option("--check-interval",
+	dest="interval", type="float",
         help="Set time interval in seconds within checks")
 
-parser.add_option("--random-wait", dest="wait",
+parser.add_option("--random-wait",
+	dest="wait", type="float",
         help="Set maximum random waiting time")
+
+parser.add_option("--store",
+        action="store_true", dest="store", default=False,
+        help="Store current parameter values into configuration file")
 
 options , args = parser.parse_args()
 
