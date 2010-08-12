@@ -123,7 +123,7 @@ def pull ( url , uuid , cmds ) :
         command.wait()
         if command.returncode != 0 :
             errmsg.append( "failed at %s" % cmdline.strip() )
-            loginout ( url , sessid , True )
+            loginout ( url , uuid , True )
             break
     else :
         # NOTE : If loginout fails here, we get an updated system failed telling to AmebaC3.
