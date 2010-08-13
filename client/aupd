@@ -311,6 +311,7 @@ def pulldaemon ( config , options , args ) :
         store_config( config )
 
     amebaC3_client.daemon.REDIRECT_TO = "/tmp/ameba.log"
+    open( amebaC3_client.daemon.REDIRECT_TO , "a" ).close()
     retcode = amebaC3_client.daemon.createDaemon()
 
     args.append( "buffermsgs" )
