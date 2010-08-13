@@ -84,8 +84,10 @@ def logout ( url , sessid , failed=False ) :
 
     req = urllib2.Request( "%s/logoff" % url )
     req.add_header( "Cookie" , "pysid=%s" % sessid )
-    if failed :
+    if failed is True :
         req.add_header( "X-AmebaStatus" , "FAIL" )
+    elif failed :
+        req.add_header( "X-AmebaStatus" , "%s" % failed )
 
     try :
         res = urllib2.urlopen( req )
@@ -102,7 +104,7 @@ def logout ( url , sessid , failed=False ) :
     return False
 
 
-def pull ( url , uuid , cmds ) :
+def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
 
     sessid , delay = login( url , uuid )
 
@@ -122,8 +124,12 @@ def pull ( url , uuid , cmds ) :
         null.close()
         command.wait()
         if command.returncode != 0 :
-            errmsg.append( "failed at %s" % cmdline.strip() )
-            loginout ( url , uuid , True )
+            if avail_pkgs_retcode == command.returncode :
+                errmsg.append( "outdate at %s" % cmdline.strip() )
+                loginout ( url , uuid , "WARNING" )
+            else :
+                errmsg.append( "failed at %s" % cmdline.strip() )
+                loginout ( url , uuid , True )
             break
     else :
         # NOTE : If loginout fails here, we get an updated system failed telling to AmebaC3.

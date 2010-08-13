@@ -215,8 +215,11 @@ def pull ( config , options , args ) :
             sys.exit(1)
         _cmds = config.get( 'pull' , 'update_cmds' )
 
+    avail_pkgs_retcode = 0
+    if config.has_option( 'pull' , 'avail_pkgs_ret' ) :
+        avail_pkgs_retcode = config.getint( 'pull' , 'avail_pkgs_ret' )
 
-    ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') )
+    ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , avail_pkgs_retcode )
     if ret :
         if process_msgs :
             if amebaC3_client.client.has_errmsg() :
