@@ -107,9 +107,10 @@ def register ( config , options , args ) :
             sys.exit(1)
         _uuid = config.get( 'registration' , 'uuid' )
 
-    _distro = guess_distro()
     if options.distro :
         _distro = options.distro
+    else :
+        _distro = guess_distro()
 
     if not _url or not _uuid  or not _distro:
         print "ERROR : Missing parameters"
@@ -217,17 +218,17 @@ def pull ( config , options , args ) :
             sys.exit(1)
         _cmds = config.get( 'pull' , 'update_cmds' )
 
-    avail_pkgs_retcode = 0
     if config.has_option( 'pull' , 'avail_pkgs_ret' ) :
         avail_pkgs_retcode = config.getint( 'pull' , 'avail_pkgs_ret' )
-
-    random_wait = 0
-
-    if config.has_option( 'pulldaemon' , 'random-wait' ) :
-        random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
+    else :
+        avail_pkgs_retcode = 0
 
     if options.wait :
         random_wait = options.wait
+    elif config.has_option( 'pulldaemon' , 'random-wait' ) :
+        random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
+    else :
+        random_wait = 0
 
     if random_wait :
         time.sleep( random_wait * random.random() )
@@ -288,28 +289,25 @@ import amebaC3_client.daemon
 
 def pulldaemon ( config , options , args ) :
 
-    check_interval = False
-
-    if config.has_option( 'pulldaemon' , 'check-interval' ) :
-        check_interval = config.getfloat( 'pulldaemon' , 'check-interval' )
-
     if options.interval :
         check_interval = options.interval
+    elif config.has_option( 'pulldaemon' , 'check-interval' ) :
+        check_interval = config.getfloat( 'pulldaemon' , 'check-interval' )
+    else :
+        check_interval = False
 
     if check_interval is False :
         print "ERROR : Missing parameters"
         parser.print_help()
         sys.exit(1)
 
-    random_wait = 0
-
-    if config.has_option( 'pulldaemon' , 'random-wait' ) :
-        random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
-
     if options.wait :
         random_wait = options.wait
     elif config.has_option( 'pulldaemon' , 'random-wait' ) :
+        random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
         options.wait = random_wait
+    else :
+        random_wait = 0
 
     if args :
         parser.print_help()
