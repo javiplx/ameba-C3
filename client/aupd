@@ -27,7 +27,7 @@ import sys
 usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
 \t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] pulldaemon
-\t%prog [--check-only|--force-upgrade] pull
+\t%prog [--check-only|--force-upgrade] [--random-wait seconds] pull
 \t%prog login
 \t%prog --sessid id logout
 \t%prog loginout
@@ -182,6 +182,8 @@ def logout ( config , options , args ) :
             print "ERROR : %s" % msg
 
 
+import time
+
 def pull ( config , options , args ) :
 
     process_msgs = True
@@ -218,6 +220,17 @@ def pull ( config , options , args ) :
     avail_pkgs_retcode = 0
     if config.has_option( 'pull' , 'avail_pkgs_ret' ) :
         avail_pkgs_retcode = config.getint( 'pull' , 'avail_pkgs_ret' )
+
+    random_wait = 0
+
+    if config.has_option( 'pulldaemon' , 'random-wait' ) :
+        random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
+
+    if options.wait :
+        random_wait = options.wait
+
+    if random_wait :
+        time.sleep( random_wait * random.random() )
 
     ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , avail_pkgs_retcode )
     if ret :
@@ -295,6 +308,8 @@ def pulldaemon ( config , options , args ) :
 
     if options.wait :
         random_wait = options.wait
+    elif config.has_option( 'pulldaemon' , 'random-wait' ) :
+        options.wait = random_wait
 
     if args :
         parser.print_help()
