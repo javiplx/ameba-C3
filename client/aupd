@@ -291,7 +291,7 @@ def pulldaemon ( config , options , args ) :
     random_wait = 0
 
     if config.has_option( 'pulldaemon' , 'random-wait' ) :
-        check_interval = config.getfloat( 'pulldaemon' , 'random-wait' )
+        random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
 
     if options.wait :
         random_wait = options.wait
