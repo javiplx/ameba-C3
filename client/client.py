@@ -118,23 +118,24 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
         time.sleep( delay )
 
     # NOTE : As we are using external updaters, we need to use loginout instead of logout to end session
-    for cmdline in cmds :
+    for _cmdline in cmds :
+        cmdline = _cmdline.strip()
         null = open( "/dev/null" , 'a' )
-        command = subprocess.Popen( cmdline.strip('!').strip().split() , stdout=null , stderr=subprocess.STDOUT )
+        command = subprocess.Popen( cmdline.strip(' !').split() , stdout=null , stderr=subprocess.STDOUT )
         null.close()
         command.wait()
         if cmdline.startswith('!') :
           if command.returncode == 0 :
-            errmsg.append( "outdate at %s" % cmdline.strip() )
+            errmsg.append( "outdate at %s" % cmdline )
             loginout ( url , uuid , "WARNING" )
             break
         else :
           if command.returncode != 0 :
             if avail_pkgs_retcode == command.returncode :
-                errmsg.append( "outdate at %s" % cmdline.strip() )
+                errmsg.append( "outdate at %s" % cmdline )
                 loginout ( url , uuid , "WARNING" )
             else :
-                errmsg.append( "failed at %s" % cmdline.strip() )
+                errmsg.append( "failed at %s" % cmdline )
                 loginout ( url , uuid , True )
             break
     else :
