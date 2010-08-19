@@ -185,7 +185,7 @@ def logout ( config , options , args ) :
 
 import time
 
-def pull ( config , options , args ) :
+def pull ( config , options , args , enable_wait=True ) :
 
     process_msgs = True
     if args and args[0] == "buffermsgs" :
@@ -223,13 +223,14 @@ def pull ( config , options , args ) :
     else :
         avail_pkgs_retcode = 0
 
-    if options.wait :
-        random_wait = options.wait
-    elif config.has_option( 'pulldaemon' , 'random-wait' ) :
-        random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
+    if enable_wait :
+        if options.wait :
+            random_wait = options.wait
+        elif config.has_option( 'pulldaemon' , 'random-wait' ) :
+            random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
 
-    if random_wait :
-        time.sleep( random_wait * random.random() )
+        if random_wait :
+            time.sleep( random_wait * random.random() )
 
     ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , avail_pkgs_retcode )
     if ret :
@@ -271,7 +272,7 @@ timerid = None
 
 def __pulldaemon ( config , options , args , check_interval ) :
 
-    ret = pull( config , options , list(args) )
+    ret = pull( config , options , list(args) , False )
     if ret :
         # NOTE : we just drop any warnings
         amebaC3_client.client.get_all_errmsg()
