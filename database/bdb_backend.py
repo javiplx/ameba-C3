@@ -4,9 +4,9 @@
 import bsddb
 
 
-import amebaC3_database as database
+import baseclass , exceptions
 
-class Database ( database.Database ) :
+class Database ( baseclass.Database ) :
 
     def __init__ ( self, dbdir , dbname ) :
 
@@ -27,7 +27,7 @@ class Database ( database.Database ) :
         try :
             lock = self.dbenv.lock_get( self.dblock , uuid , bsddb.db.DB_LOCK_WRITE , flag )
         except bsddb.db.DBLockNotGrantedError , ex :
-            raise database.RecordLocked(uuid)
+            raise exceptions.RecordLocked(uuid)
         except :
             raise Exception( "Unexpected excepton" )
         return lock
@@ -45,7 +45,7 @@ class Database ( database.Database ) :
         if db.has_key( uuid ) :
             db.close()
             self.lock_put(lock)
-            raise database.KeyExists( uuid )
+            raise exceptions.KeyExists( uuid )
 
         db[ uuid ] = self.serialize( dbvalues )
 
@@ -59,7 +59,7 @@ class Database ( database.Database ) :
 
         if not db.has_key( uuid ) :
             db.close()
-            raise database.KeyNotFound( uuid )
+            raise exceptions.KeyNotFound( uuid )
 
         record = self.deserialize( db[uuid] )
 

@@ -2,11 +2,11 @@
 import os
 
 
-import amebaC3_database as database
+import baseclass , exceptions
 
 import time
 
-class Database ( database.Database ) :
+class Database ( baseclass.Database ) :
 
     def __init__ ( self, dbdir , dbname ) :
 
@@ -24,7 +24,7 @@ class Database ( database.Database ) :
         lock = os.path.join( self.dbenv , ".%s" % uuid )
         if os.path.exists( lock ) :
             if flag : 
-                raise database.RecordLocked(uuid)
+                raise exceptions.RecordLocked(uuid)
             time.sleep( 0.01 )
             while os.path.exists( lock ) :
                 time.sleep( 0.01 )
@@ -43,7 +43,7 @@ class Database ( database.Database ) :
 
         if os.path.exists( fname ) :
             self.lock_put(lock)
-            raise database.KeyExists( uuid )
+            raise exceptions.KeyExists( uuid )
 
         fd = open( fname , 'w' )
         fd.write( self.serialize( dbvalues ) )
@@ -56,7 +56,7 @@ class Database ( database.Database ) :
         fname = os.path.join( self.dbenv , uuid )
 
         if not os.path.exists( fname ) :
-            raise database.KeyNotFound( uuid )
+            raise exceptions.KeyNotFound( uuid )
 
         fd = open( fname )
         record = self.deserialize( "".join( fd.readlines() ) )
