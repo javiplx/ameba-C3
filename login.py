@@ -73,6 +73,13 @@ def authenhandler ( req ) :
                 req.log_error( "authenhandler : Malformed Authorization UUID %s" % uuid )
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
+            db = database.get( database.dbtype )
+            node = db.get_node( uuid )
+            db.close()
+            if not node :
+                req.log_error( "authenhandler : Node '%s' is not registered" % uuid )
+                req.status = apache.HTTP_UNAUTHORIZED
+                return apache.DONE
             req.log_error( "authenhandler : user '%s' from UUID Authentication" % uuid , apache.APLOG_INFO )
             req.user = uuid
         else :
@@ -90,15 +97,12 @@ def authenhandler ( req ) :
                 req.log_error( "authenhandler : Trying to access with an obsolete session %s" % cookies["pysid"] )
             req.status = apache.HTTP_UNAUTHORIZED
             return apache.DONE
-        db = database.get( database.dbtype )
-        dbvalues = db.get_node( req.user )
-        db.close()
         # NOTE : proper expiration time is not set on the cookie
         sess.set_timeout( default_session_timeout )
         sess['UUID'] = req.user
-        sess['HOSTNAME'] = dbvalues['hostname']
-        sess['DISTRO'] = dbvalues['distro']
-        sess['CHANNELS'] = dbvalues.get( "channels" , "*" )
+        sess['HOSTNAME'] = node['hostname']
+        sess['DISTRO'] = node['distro']
+        sess['CHANNELS'] = node.get( "channels" , "*" )
         sess.save()
         nagios.nodealive( sess )
     else :
