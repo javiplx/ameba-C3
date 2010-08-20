@@ -225,11 +225,9 @@ def pull ( config , options , args , enable_wait=True ) :
 
     if enable_wait :
         if options.wait :
-            random_wait = options.wait
+            time.sleep( options.wait * random.random() )
         elif config.has_option( 'pulldaemon' , 'random-wait' ) :
             random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
-
-        if random_wait :
             time.sleep( random_wait * random.random() )
 
     ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , avail_pkgs_retcode )
