@@ -16,13 +16,13 @@ from distutils.core import setup
 
 setup(
 	name = "amebaC3_client" ,
-	version = "1.1" ,
+	version = "1.2" ,
 	description = "AmebaC3 update agent" ,
 	author = "Javier Palacios" ,
 	author_email = "javiplx@gmail.com" ,
 	url = "http://wiki.github.com/javiplx/ameba-C3" ,
-	scripts = [ "aupd" ] ,
-	package_dir = { 'amebaC3_client':"" } ,
+	scripts = [ "client/aupd" ] ,
+	package_dir = { 'amebaC3_client':"client" } ,
 	packages = [ "amebaC3_client" ] ,
 #	package_data = { 'amebaC3_client': [ "externals/15ameba-updater" , "externals/ameba-updater.py" ] } ,
 	license = "GPLv2"
