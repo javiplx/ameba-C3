@@ -59,7 +59,7 @@ class Database ( baseclass.Database ) :
             raise exceptions.KeyNotFound( uuid )
 
         fd = open( fname )
-        record = self.deserialize( "".join( fd.readlines() ) )
+        record = self.deserialize( "".join( fd.readlines() )[:-1] )
         fd.close()
 
         return record
