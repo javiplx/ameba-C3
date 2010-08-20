@@ -4,7 +4,7 @@
 import bsddb
 
 
-import database
+import amebaC3_database as database
 
 class Database ( database.Database ) :
 
