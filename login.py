@@ -11,7 +11,7 @@
 # General Public License for more details.
 
 
-import database
+import amebaC3_database as database
 
 import nagios
 

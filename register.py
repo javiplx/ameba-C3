@@ -1,5 +1,5 @@
 
-import database
+import amebaC3_database as database
 
 import nagios
 
