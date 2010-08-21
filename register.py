@@ -56,8 +56,7 @@ def handler ( req ) :
     finally :
         db.close()
 
-    cb = callbacks.nagios.NagiosAddHost ()
-    cb.run( args['UUID'] , dbvalues )
+    callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
 
     req.content_type = "text/plain"
     req.write( "OK" )

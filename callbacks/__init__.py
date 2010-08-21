@@ -31,6 +31,14 @@ def register ( item ) :
         raise Exception( "Unallowed callback type for %s" % item )
 
 
+def run_stage ( stage_name , arglist ) :
+    if stage_name not in __callbacks__.keys() :
+        raise Exception( "Unknown stage '%s'" % stage_name )
+    for cb_name in __callbacks__[ stage_name ] :
+        cb = cb_name()
+        apply( cb.run , arglist )
+
+
 for path in __path__ :
     for modname in os.listdir( path ) :
         if modname.endswith(".py") and not modname.startswith("_") :
