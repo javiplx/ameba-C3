@@ -8,10 +8,23 @@ import time
 import os
 
 
-# FIXME : Replace hardcoded values with variables from a .ini file
+import ConfigParser
+
+configfile = "/etc/amebaC3.conf"
+
+config = ConfigParser.RawConfigParser()
+config.read( configfile )
+
 dbroot = "/var/lib/amebaC3"
 dbname = "ameba"
 dbtype = "fs"
+
+if config.get( 'database' , 'dbroot' ) :
+    dbroot = config.get( 'database' , 'dbroot' ) :
+if config.get( 'database' , 'dbname' ) :
+    dbname = config.get( 'database' , 'dbname' ) :
+if config.get( 'database' , 'type' ) :
+    type = config.get( 'database' , 'type' ) :
 
 
 def get ( type ) :
