@@ -102,6 +102,8 @@ class NagiosServiceUpdate ( callbacks.AbstractUpdateCallback ) :
         fd = open( commandfile , 'a' )
         if status == "OK" :
             fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;0;Ameba C3 - Up to date\n" % ( time.time() , sess['HOSTNAME'] ) )
+        elif status == "WARNING" :
+            fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;1;Ameba C3 - Updates for packages available\n" % ( time.time() , sess['HOSTNAME'] ) )
         else :
             fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;2;Ameba C3 - Failed update\n" % ( time.time() , sess['HOSTNAME'] ) )
         fd.close()
