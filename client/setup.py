@@ -21,8 +21,8 @@ setup(
 	author = "Javier Palacios" ,
 	author_email = "javiplx@gmail.com" ,
 	url = "http://wiki.github.com/javiplx/ameba-C3" ,
-	scripts = [ "client/aupd" ] ,
-	package_dir = { 'amebaC3_client':"client" } ,
+	scripts = [ "aupd" ] ,
+	package_dir = { 'amebaC3_client':"" } ,
 	packages = [ "amebaC3_client" ] ,
 #	package_data = { 'amebaC3_client': [ "externals/15ameba-updater" , "externals/ameba-updater.py" ] } ,
 	license = "GPLv2"
