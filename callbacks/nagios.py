@@ -18,7 +18,7 @@ import os
 
 restart_allowed = True
 
-cfg_dir = "/etc/nagios/ameba"
+cfg_dir = "/etc/nagios/amebaC3"
 commandfile = "/var/spool/nagios/cmd/nagios.cmd"
 
 node_template = """define host{
