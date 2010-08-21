@@ -20,11 +20,11 @@ dbname = "ameba"
 dbtype = "fs"
 
 if config.get( 'database' , 'dbroot' ) :
-    dbroot = config.get( 'database' , 'dbroot' ) :
+    dbroot = config.get( 'database' , 'dbroot' )
 if config.get( 'database' , 'dbname' ) :
-    dbname = config.get( 'database' , 'dbname' ) :
+    dbname = config.get( 'database' , 'dbname' )
 if config.get( 'database' , 'type' ) :
-    type = config.get( 'database' , 'type' ) :
+    type = config.get( 'database' , 'type' )
 
 
 def get ( type ) :
