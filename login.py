@@ -13,7 +13,7 @@
 
 import amebaC3_database as database
 
-import nagios
+import callbacks
 
 from mod_python import apache
 from mod_python import Session , Cookie
@@ -104,7 +104,8 @@ def authenhandler ( req ) :
         sess['DISTRO'] = node['distro']
         sess['CHANNELS'] = node.get( "channels" , "*" )
         sess.save()
-        nagios.nodealive( sess )
+        cb = callbacks.nagios.NagiosHostUpdate()
+        cb.run( sess )
     else :
         if req.user :
             if req.user != sess['UUID'] :
@@ -117,7 +118,8 @@ def authenhandler ( req ) :
             nagios.nodealive( sess )
         else :
             if req.path_info == "/logoff" :
-                nagios.servicealive( sess , req.headers_in.get( "X-AmebaStatus" , "OK" ) )
+                cb = callbacks.nagios.NagiosServiceUpdate()
+                cb.run( sess , req.headers_in.get( "X-AmebaStatus" , "OK" ) )
                 req.log_error( "authenhandler : user '%s' ended session %s" % ( sess['UUID'] , sess.id() ) , apache.APLOG_INFO )
                 req.user = sess['UUID']
                 req.subprocess_env['sessid'] = sess.id()

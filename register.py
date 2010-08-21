@@ -1,7 +1,7 @@
 
 import amebaC3_database as database
 
-import nagios
+import callbacks
 
 from mod_python import apache
 from mod_python import util
@@ -57,7 +57,8 @@ def handler ( req ) :
     finally :
         db.close()
 
-    nagios.run( args['UUID'] , dbvalues )
+    cb = callbacks.nagios.NagiosAddHost ()
+    cb.run( args['UUID'] , dbvalues )
 
     req.content_type = "text/plain"
     req.write( "OK" )
