@@ -11,6 +11,8 @@
 # General Public License for more details.
 
 
+import __baseclass
+
 import types
 import os
 
@@ -18,27 +20,12 @@ __all__ = []
 __callbacks__ = { 'register':[] , 'alive':[] , 'update':[] }
 
 
-class BaseCallback :
-
-    def run ( self , *args , **kwargs ) :
-        pass
-
-class AbstractRegisterCallback ( BaseCallback ) :
-    pass
-
-class AbstractAliveCallback ( BaseCallback ) :
-    pass
-
-class AbstractUpdateCallback ( BaseCallback ) :
-    pass
-
-
 def register ( item ) :
-    if issubclass( item , AbstractRegisterCallback ) :
+    if issubclass( item , __baseclass.AbstractRegisterCallback ) :
         __callbacks__['register'].append( item )
-    elif issubclass( item , AbstractAliveCallback ) :
+    elif issubclass( item , __baseclass.AbstractAliveCallback ) :
         __callbacks__['alive'].append( item )
-    elif issubclass( item , AbstractUpdateCallback ) :
+    elif issubclass( item , __baseclass.AbstractUpdateCallback ) :
         __callbacks__['update'].append( item )
     else :
         raise Exception( "Unallowed callback type for %s" % item )
@@ -54,6 +41,6 @@ for modname in __all__ :
     for name in dir(module) :
         item = getattr( module , name )
         if type(item) == types.ClassType :
-            if issubclass( item , BaseCallback ) :
+            if issubclass( item , __baseclass.BaseCallback ) :
                 register( item )
 

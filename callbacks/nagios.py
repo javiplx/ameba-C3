@@ -11,7 +11,7 @@
 # General Public License for more details.
 
 
-import callbacks
+import __baseclass
 
 import time
 import os
@@ -48,7 +48,7 @@ group_template = """define hostgroup{
 """
 
 
-class NagiosAddHost ( callbacks.AbstractRegisterCallback ) :
+class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
 
     def run ( self , uuid , dbvalues ) :
 
@@ -88,7 +88,7 @@ class NagiosAddHost ( callbacks.AbstractRegisterCallback ) :
             fd.close()
 
 
-class NagiosHostUpdate ( callbacks.AbstractAliveCallback ) :
+class NagiosHostUpdate ( __baseclass.AbstractAliveCallback ) :
 
     def run ( self , sess ) :
         fd = open( commandfile , 'a' )
@@ -96,7 +96,7 @@ class NagiosHostUpdate ( callbacks.AbstractAliveCallback ) :
         fd.close()
 
 
-class NagiosServiceUpdate ( callbacks.AbstractUpdateCallback ) :
+class NagiosServiceUpdate ( __baseclass.AbstractUpdateCallback ) :
 
     def run( self , sess , status ) :
         fd = open( commandfile , 'a' )
