@@ -1,6 +1,5 @@
 
-import amebaC3_database as database
-
+import database
 import callbacks
 
 from mod_python import apache
