@@ -12,7 +12,7 @@
 # General Public License for more details.
 
 
-import database
+import amebaC3.database
 
 import sys
 
@@ -20,11 +20,11 @@ dbtypes = sys.argv[1:]
 if not dbtypes :
     dbtypes = ( "fs" , "bdb" )
 
-database.dbroot = "/tmp/amebaC3-tmp"
+amebaC3.database.dbroot = "/tmp/amebaC3-tmp"
 
 for type in dbtypes :
     try :
-        db = database.get( type )
+        db = amebaC3.database.get( type )
         if db.add_user ( "admin" , { 'password':"admin" , 'group':"admin" , 'registration_by':'__init__' } ) :
             print "Added admin"
         if db.add_user ( "nagiosadmin" , { 'password':"nagiosadmin" , 'group':"admin" , 'registration_by':'__init__' } ) :
@@ -34,7 +34,7 @@ for type in dbtypes :
         try :
             if db.add_user ( "user0" ) :
                 print "Added user0"
-        except database.KeyExists , ex :
+        except amebaC3.database.KeyExists , ex :
             print "Expected failure when adding user0 : %s - %s" % ( ex.__class__ , ex.message )
 
         print "Check user admin",db.check_user_password( "admin" , "admin" )
@@ -48,7 +48,7 @@ for type in dbtypes :
 
         db.close()
 
-    except database.C3DBException , ex :
+    except amebaC3.database.C3DBException , ex :
         print "Ameba DB Exception: %s" % ex.message
     except Exception , ex :
         print "Exception : %s" % ex
