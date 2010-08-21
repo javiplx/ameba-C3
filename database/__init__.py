@@ -16,7 +16,7 @@ config = ConfigParser.RawConfigParser()
 config.read( configfile )
 
 dbroot = "/var/lib/amebaC3"
-dbname = "ameba"
+dbname = "amebaC3"
 dbtype = "fs"
 
 if config.has_option( 'database' , 'dbroot' ) :
