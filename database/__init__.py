@@ -19,11 +19,11 @@ dbroot = "/var/lib/amebaC3"
 dbname = "ameba"
 dbtype = "fs"
 
-if config.get( 'database' , 'dbroot' ) :
+if config.has_option( 'database' , 'dbroot' ) :
     dbroot = config.get( 'database' , 'dbroot' )
-if config.get( 'database' , 'dbname' ) :
+if config.has_option( 'database' , 'dbname' ) :
     dbname = config.get( 'database' , 'dbname' )
-if config.get( 'database' , 'type' ) :
+if config.has_option( 'database' , 'type' ) :
     type = config.get( 'database' , 'type' )
 
 
