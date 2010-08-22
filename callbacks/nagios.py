@@ -29,14 +29,9 @@ node_template = """define host{
         }
 
 define service{
-        use                             local-service
+        use                             ameba-service
         host_name                       %(hostname)s
         service_description             ameba updater
-	passive_checks_enabled		1
-	check_freshness			1
-	freshness_threshold		3600
-        active_checks_enabled           0
-        check_command                   check_freshness
         }
 """
 
