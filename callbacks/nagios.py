@@ -26,6 +26,7 @@ node_template = """define host{
         host_name               %(hostname)s
         alias                   %(uuid)s
         address                 %(hostaddress)s
+        hostgroups              %(distro)s
         }
 
 define service{
@@ -38,7 +39,6 @@ define service{
 group_template = """define hostgroup{
         hostgroup_name  %(distro)s
         alias           %(distro)s nodes
-        members         %(hostname)s
         }
 """
 
@@ -59,20 +59,7 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
 
         coso = []
         fname = os.path.join( cfg_dir , "%s.cfg" % _dbvalues['distro'] )
-        if os.path.exists( fname ) :
-            outlines = []
-            fd = open( fname )
-            for line in fd.readlines() :
-                if line.find( "members" ) != -1 :
-                    outlines.append( line.replace( "\n" , " , %s" % _dbvalues['hostname'] ) )
-                else :
-                    outlines.append( line[:-1] )
-            fd.close()
-            fd = open( fname , 'w' )
-            fd.write( "\n".join( outlines ) )
-            fd.write( "\n" )
-            fd.close()
-        else :
+        if not os.path.exists( fname ) :
             fd = open( fname , 'w' )
             fd.write( group_template % _dbvalues )
             fd.close()
