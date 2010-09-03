@@ -11,13 +11,10 @@
 # General Public License for more details.
 
 
-version = 1.0
+__version__ = 1.0
 
 
 import urllib , urllib2
-
-import subprocess
-import time
 
 
 errmsg = []
@@ -104,6 +101,9 @@ def logout ( url , sessid , failed=False ) :
     return False
 
 
+import subprocess
+import time
+
 def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
 
     sessid , delay = login( url , uuid )
@@ -121,7 +121,12 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
     for _cmdline in cmds :
         cmdline = _cmdline.strip()
         null = open( "/dev/null" , 'a' )
-        command = subprocess.Popen( cmdline.strip(' !').split() , stdout=null , stderr=subprocess.STDOUT )
+        if cmdline.count('|') == 1 :
+            cmdline0 , cmdline1 = cmdline.split('|',1)
+            command0 = subprocess.Popen( cmdline0.strip(' !').split() , stdout=subprocess.PIPE , stderr=null )
+            command = subprocess.Popen( cmdline1.strip(' !').split() , stdin=command0.stdout , stdout=null , stderr=subprocess.STDOUT )
+        else :
+            command = subprocess.Popen( cmdline.strip(' !').split() , stdout=null , stderr=subprocess.STDOUT )
         null.close()
         command.wait()
         if cmdline.startswith('!') :
