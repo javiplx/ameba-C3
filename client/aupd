@@ -12,6 +12,9 @@
 # General Public License for more details.
 
 
+__version__ = "1.3"
+
+
 import amebaC3_client.client
 
 
@@ -22,18 +25,25 @@ configfile = "/etc/aupd.conf"
 config = ConfigParser.RawConfigParser()
 config.read( configfile )
 
-import sys
-
 usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
 \t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] pulldaemon
-\t%prog [--check-only|--force-upgrade] [--random-wait seconds] pull
+\t%prog [--random-wait seconds] [--check-only|--force-upgrade] pull
 \t%prog login
 \t%prog --sessid id logout
 \t%prog loginout
 """
 
-version = "%prog 1.1"
+version = "%%prog %s" % __version__
+
+import logging
+
+console = logging.StreamHandler()
+formatter = logging.Formatter("%(levelname)s : %(message)s")
+console.setFormatter(formatter)
+
+logger = logging.getLogger()
+logger.addHandler( console )
 
 
 import os , glob
@@ -74,7 +84,9 @@ import socket
 
 def register ( config , options , args ) :
 
+    # FIXME : Warning if options.store assigned
     options.store = False
+    errors = []
 
     _url = None
 
@@ -82,11 +94,18 @@ def register ( config , options , args ) :
         _url = args.pop(0)
         options.store = True
 
-    if config.has_option( 'registration' , 'url' ) :
+    if config.has_option( 'global' , 'url' ) :
         if _url :
-            print "ERROR : server URL already given on configuration file"
-            sys.exit(1)
-        _url = config.get( 'registration' , 'url' )
+            if _url != config.get( 'global' , 'url' ) :
+                logger.error( "Supplied URL does not match the one in configuration file" )
+                return False
+            logger.warning( "Server URL already given on configuration file" )
+            options.store = False
+        else :
+            _url = config.get( 'global' , 'url' )
+
+    if not _url :
+        errors.append( "URL" )
 
     _uuid = None
 
@@ -95,57 +114,99 @@ def register ( config , options , args ) :
         options.store = True
 
     if _uuid and options.autouuid :
-        print "ERROR : You should not give explicit UUID when requesting autogeneration"
-        sys.exit(1)
+        logger.error( "You should not give explicit UUID when requesting autogeneration" )
+        return False
 
     if options.autouuid :
         _uuid = uuid.uuid4()
 
-    if config.has_option( 'registration' , 'uuid' ) :
+    if config.has_option( 'global' , 'uuid' ) :
         if _uuid :
-            print "ERROR : UUID already given on configuration file"
-            sys.exit(1)
-        _uuid = config.get( 'registration' , 'uuid' )
+            if _uuid != config.get( 'global' , 'uuid' ) :
+                logger.error( "Given UUID does not match the one from configuration file" )
+                return False
+            logger.warning( "UUID already given on configuration file" )
+        else :
+            _uuid = config.get( 'global' , 'uuid' )
 
+    if not _uuid :
+        errors.append( "UUID" )
+
+    _distro = guess_distro()
     if options.distro :
+        if _distro and _distro != options.distro :
+            # FIXME : Turn this into error ?
+            logger.warning( "Guessed distro name '%s' differs from supplied on command line" % _distro )
         _distro = options.distro
-    else :
-        _distro = guess_distro()
 
-    if not _url or not _uuid  or not _distro:
-        print "ERROR : Missing parameters"
+    if not _distro :
+        errors.append( "Distro" )
+
+    if errors :
+        logger.error( "Missing parameters : %s" % ", ".join( errors ) )
         parser.print_help()
-        sys.exit(1)
+        return False
 
     if args :
-        print "ERROR : too many arguments"
+        logger.error( "Too many arguments" )
         parser.print_help()
-        sys.exit(1)
+        return False
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
     if amebaC3_client.client.register( _url , data ) :
         if amebaC3_client.client.has_errmsg() :
             for msg in amebaC3_client.client.get_all_errmsg() :
-                print "WARNING : %s" % msg
+                logger.warning( msg )
+        # FIXME : If we supply url & uuid on command line matching those in config file, we will rewrite it
+        #         Giving only url will not overwrite as store flag is set back to False
+        # A temporary solution is to check before writing that new info is being added
         if options.store :
-            if not config.has_section( 'registration' ) :
-                config.add_section( 'registration' )
-            config.set( 'registration' , 'url' , _url )
-            config.set( 'registration' , 'uuid' , _uuid )
+            if not config.has_section( 'global' ) :
+                config.add_section( 'global' )
+            config.set( 'global' , 'url' , _url )
+            config.set( 'global' , 'uuid' , _uuid )
             store_config( config )
     else :
         for msg in amebaC3_client.client.get_all_errmsg() :
-            print "ERROR : %s" % msg
+            logger.error( msg )
+
+    return True
+
+
+def check_configuration ( check_uuid=True ) :
+
+    errors = []
+
+    if not config.has_section( 'global' ) :
+        logger.critical( "Main section missing on configuration file" )
+        return False
+
+    if not config.has_option( 'global' , 'url' ) :
+        errors.append( "URL" )
+
+    if check_uuid :
+        if not config.has_option( 'global' , 'uuid' ) :
+            errors.append( "UUID" )
+
+    if errors :
+        logger.critical( "Missing parameters on main section : %s" % ", ".join( errors ) )
+        return False
+
+    return True
 
 
 def login ( config , options , args ) :
 
     if args :
+        logger.error( "Too many arguments" )
         parser.print_help()
-        sys.exit(1)
+        return False
 
-    _url = config.get( 'registration' , 'url' )
-    _uuid = config.get( 'registration' , 'uuid' )
+    if not check_configuration() :
+        return False
+
+    _url = config.get( 'global' , 'url' )
+    _uuid = config.get( 'global' , 'uuid' )
 
     sessid , delay = amebaC3_client.client.login ( _url , _uuid )
     if sessid :
@@ -154,185 +215,175 @@ def login ( config , options , args ) :
             print "activated in %s seconds" % delay
         if amebaC3_client.client.has_errmsg() :
             for msg in amebaC3_client.client.get_all_errmsg() :
-                print "WARNING : %s" % msg
+                logger.warning( msg )
     else :
         for msg in amebaC3_client.client.get_all_errmsg() :
-            print "ERROR : %s" % msg
+            logger.error( msg )
+
+    return True
 
 
 def logout ( config , options , args ) :
 
-    if not options.sessid :
-        print "ERROR : Missing parameters"
-        parser.print_help()
-        sys.exit(1)
-
     if args :
+        logger.error( "Too many arguments" )
         parser.print_help()
-        sys.exit(1)
+        return False
 
-    _url = config.get( 'registration' , 'url' )
+    if not options.sessid :
+        logger.error( "Missing session identifier" )
+        parser.print_help()
+        return False
+
+    if not check_configuration( False ) :
+        return False
+
+    _url = config.get( 'global' , 'url' )
 
     if amebaC3_client.client.logout ( _url , options.sessid ) :
-        print "session closed : %s" % options.sessid
+        logger.info( "Session closed : %s" % options.sessid )
         if amebaC3_client.client.has_errmsg() :
             for msg in amebaC3_client.client.get_all_errmsg() :
-                print "WARNING : %s" % msg
+                logger.warning( msg )
     else :
         for msg in amebaC3_client.client.get_all_errmsg() :
-            print "ERROR : %s" % msg
+            logger.error( msg )
 
-
-import time
-
-def pull ( config , options , args , enable_wait=True ) :
-
-    process_msgs = True
-    if args and args[0] == "buffermsgs" :
-        args.pop(0)
-        process_msgs = False
-
-    if args :
-        parser.print_help()
-        sys.exit(1)
-
-    _url = config.get( 'registration' , 'url' )
-    _uuid = config.get( 'registration' , 'uuid' )
-
-    if not config.has_section( 'pull' ) :
-        print "ERROR : pull section mising on configuration"
-        sys.exit(1)
-
-    if options.check_only is None :
-        if config.has_option( 'pull' , 'check-only' ) :
-            options.check_only = config.getboolean( 'pull' , 'check-only' )
-
-    if options.check_only :
-        if not config.has_option( 'pull' , 'check_cmds' ) :
-            print "ERROR : No check_cmds defined on pull section"
-            sys.exit(1)
-        _cmds = config.get( 'pull' , 'check_cmds' )
-    else :
-        if not config.has_option( 'pull' , 'update_cmds' ) :
-            print "ERROR : No update_cmds defined on pull section"
-            sys.exit(1)
-        _cmds = config.get( 'pull' , 'update_cmds' )
-
-    if config.has_option( 'pull' , 'avail_pkgs_ret' ) :
-        avail_pkgs_retcode = config.getint( 'pull' , 'avail_pkgs_ret' )
-    else :
-        avail_pkgs_retcode = 0
-
-    if enable_wait :
-        if options.wait :
-            time.sleep( options.wait * random.random() )
-        elif config.has_option( 'pulldaemon' , 'random-wait' ) :
-            random_wait = config.getfloat( 'pulldaemon' , 'random-wait' )
-            time.sleep( random_wait * random.random() )
-
-    ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , avail_pkgs_retcode )
-    if ret :
-        if process_msgs :
-            if amebaC3_client.client.has_errmsg() :
-                for msg in amebaC3_client.client.get_all_errmsg() :
-                    print "WARNING : %s" % msg
-    else :
-        if process_msgs :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                print "ERROR : %s" % msg
-
-    return ret
+    return True
 
 
 def loginout ( config , options , args ) :
 
     if args :
+        logger.error( "Too many arguments" )
         parser.print_help()
-        sys.exit(1)
+        return False
 
-    _url = config.get( 'registration' , 'url' )
-    _uuid = config.get( 'registration' , 'uuid' )
+    if not check_configuration() :
+        return False
+
+    _url = config.get( 'global' , 'url' )
+    _uuid = config.get( 'global' , 'uuid' )
 
     if amebaC3_client.client.loginout ( _url , _uuid ) :
         if amebaC3_client.client.has_errmsg() :
             for msg in amebaC3_client.client.get_all_errmsg() :
-                print "WARNING : %s" % msg
+                logger.warning( msg )
     else :
         for msg in amebaC3_client.client.get_all_errmsg() :
-            print "ERROR : %s" % msg
+            logger.error( msg )
+
+    return True
 
 
-import random
+import time , random
+
+def pull ( config , options , args=() ) :
+
+    if args :
+        logger.error( "Too many arguments" )
+        parser.print_help()
+        return False
+
+    if not config.has_section( 'pull' ) :
+        logger.critical( "Section 'pull' mising on configuration" )
+        return False
+
+    if options.wait is None :
+        options.wait = 0
+        if config.has_option( 'pulldaemon' , 'random-wait' ) :
+            options.wait = config.getfloat( 'pulldaemon' , 'random-wait' )
+
+    if options.check_only is None :
+        if config.has_option( 'pull' , 'check-only' ) :
+            options.check_only = config.getboolean( 'pull' , 'check-only' )
+
+    outdated_retcode = 0
+
+    cmds_parname = 'update_cmds'
+    if options.check_only :
+        cmds_parname = 'update_cmds'
+        if config.has_option( 'pull' , 'outdated_retcode' ) :
+            outdated_retcode = config.getint( 'pull' , 'outdated_retcode' )
+    if not config.has_option( 'pull' , cmds_parname ) :
+        logger.critical( "No '%s' defined on pull section" % cmds_parname )
+        return False
+    _cmds = config.get( 'pull' , cmds_parname )
+
+    if not check_configuration() :
+        return False
+
+    if options.wait :
+        time.sleep( options.wait * random.random() )
+
+    _url = config.get( 'global' , 'url' )
+    _uuid = config.get( 'global' , 'uuid' )
+
+    ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , outdated_retcode )
+    if ret :
+        if amebaC3_client.client.has_errmsg() :
+            for msg in amebaC3_client.client.get_all_errmsg() :
+                logger.warning( msg )
+    else :
+        for msg in amebaC3_client.client.get_all_errmsg() :
+            logger.error( msg )
+
+    return ret
+
 
 import threading
 
-timerid = None
+def __pulldaemon ( config , options ) :
 
-def __pulldaemon ( config , options , args , check_interval ) :
-
-    ret = pull( config , options , list(args) , False )
-    if ret :
-        # NOTE : we just drop any warnings
-        amebaC3_client.client.get_all_errmsg()
-    else :
-        # NOTE : error reporting cannot be done via stdout
-        amebaC3_client.client.get_all_errmsg()
-        #for msg in amebaC3_client.client.get_all_errmsg() :
-        #    print "ERROR : %s" % msg
-
-    wait_time = check_interval
-    if options.wait :
-        wait_time += options.wait * random.random()
-    timerid = threading.Timer( wait_time , __pulldaemon , ( config , options , args , check_interval ) )
-    timerid.start()
+    # NOTE : logging of warnings should be disabled
+    if pull( config , options ) :
+        timerid = threading.Timer( options.interval , __pulldaemon , ( config , options ) )
+        timerid.start()
 
 import amebaC3_client.daemon
 
 def pulldaemon ( config , options , args ) :
 
-    if options.interval :
-        check_interval = options.interval
-    elif config.has_option( 'pulldaemon' , 'check-interval' ) :
-        check_interval = config.getfloat( 'pulldaemon' , 'check-interval' )
-    else :
-        check_interval = False
-
-    if check_interval is False :
-        print "ERROR : Missing parameters"
-        parser.print_help()
-        sys.exit(1)
-
-    if not options.wait and config.has_option( 'pulldaemon' , 'random-wait' ) :
-        options.wait = config.getfloat( 'pulldaemon' , 'random-wait' )
-
     if args :
+        logger.error( "Too many arguments" )
         parser.print_help()
-        sys.exit(1)
+        return False
+
+    if not options.interval :
+        if config.has_option( 'pulldaemon' , 'check-interval' ) :
+            options.interval = config.getfloat( 'pulldaemon' , 'check-interval' )
+        else :
+            logger.critical( "No checking interval specified on configuration or command line" )
+            return False
+
+    if options.wait is None and config.has_option( 'pulldaemon' , 'random-wait' ) :
+        options.wait = config.getfloat( 'pulldaemon' , 'random-wait' )
 
     if options.check_only is None :
         if config.has_option( 'pulldaemon' , 'check-only' ) :
             options.check_only = config.getboolean( 'pulldaemon' , 'check-only' )
 
+    if not check_configuration() :
+        return False
+
     if options.store :
         if not config.has_section( 'pulldaemon' ) :
             config.add_section( 'pulldaemon' )
-        if options.interval :
-            config.set( 'pulldaemon' , 'check-interval' , options.interval )
-        if options.wait :
+        config.set( 'pulldaemon' , 'check-interval' , options.interval )
+        if options.wait is not None :
             config.set( 'pulldaemon' , 'random-wait' , options.wait )
+        if options.check_only is not None :
+            config.set( 'pulldaemon' , 'check-only' , options.check_only )
         store_config( config )
 
+    # FIXME : Turn this into configurable value, or use sensible filename at least
     amebaC3_client.daemon.REDIRECT_TO = "/tmp/ameba.log"
     open( amebaC3_client.daemon.REDIRECT_TO , "a" ).close()
     retcode = amebaC3_client.daemon.createDaemon()
 
-    args.append( "buffermsgs" )
-    # NOTE : we create a timer instead of calling __pulldaemon to delay the initial pull
-    wait_time = check_interval
-    if options.wait :
-        wait_time += options.wait * random.random()
-    timerid = threading.Timer( wait_time , __pulldaemon , ( config , options , args , check_interval ) )
-    timerid.start()
+    __pulldaemon( config , options )
+
+    return True
 
 
 command = { 'register':register ,
@@ -378,17 +429,23 @@ parser.add_option("--store",
         action="store_true", dest="store", default=False,
         help="Store current parameter values into configuration file")
 
-options , args = parser.parse_args()
 
-if not args :
-    parser.print_help()
-    sys.exit(1)
+import sys
 
-subcmd = args.pop(0)
+if __name__ == "__main__" :
 
-if not command.has_key( subcmd ) :
-    parser.print_help()
-    sys.exit(1)
+    options , args = parser.parse_args()
 
-command[ subcmd ]( config , options , args )
+    if not args :
+        parser.print_help()
+        sys.exit(1)
+
+    subcmd = args.pop(0)
+
+    if not command.has_key( subcmd ) :
+        parser.print_help()
+        sys.exit(1)
+
+    if not command[ subcmd ]( config , options , args ) :
+        sys.exit(1)
 

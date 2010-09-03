@@ -1,7 +1,8 @@
 aupd
+__init__.py
 client.py
 daemon.py
 setup.py
-gpl-2.0.txt
+license.txt
 externals/15ameba-updater
 externals/ameba-updater.py
