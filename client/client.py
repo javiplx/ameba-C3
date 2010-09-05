@@ -61,17 +61,18 @@ def login ( url , uuid ) :
 
     try :
         res = urllib2.urlopen( req )
-    except urllib2.HTTPError , res :
+    except urllib2.HTTPError , ex :
         errmsg.append( res.msg )
         errmsg.extend( res.readlines() )
     else :
         firstline = res.readline().split()
-        if firstline[0] == "ID" and len(firstline) == 2 :
+        if firstline and firstline[0] == "ID" and len(firstline) == 2 :
             sessid = firstline[1]
             delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
         else :
             # NOTE : login warnings could appear mixed with errors on combined operations
-            errmsg.append( firstline )
+            if firstline :
+                errmsg.append( firstline )
             errmsg.append( res.readlines() )
 
     return sessid , delay
