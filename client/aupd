@@ -276,6 +276,16 @@ def loginout ( config , options , args ) :
     return True
 
 
+import fcntl
+
+def get_lock ( filename="/tmp/aupd.lock" ) :
+    fp = open( filename , 'w' )
+    try :
+        fcntl.lockf( fp , fcntl.LOCK_EX | fcntl.LOCK_NB )
+    except IOError , ex :
+        return None
+    return fp
+
 import time , random
 
 def pull ( config , options , args=() ) :
@@ -311,6 +321,11 @@ def pull ( config , options , args=() ) :
     _cmds = config.get( 'pull' , cmds_parname )
 
     if not check_configuration() :
+        return False
+
+    lock = get_lock()
+    if not lock :
+        logger.error( "Another 'pull' instance running" )
         return False
 
     if options.wait :
