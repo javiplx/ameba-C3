@@ -34,10 +34,11 @@ def handler ( req ) :
 
     db = database.get( database.dbtype )
     try :
-      try :
         dbvalues = db.add_node( args['UUID'] , args['DISTRO'] , args['HOSTNAME'] , req )
-      except database.KeyExists , ex :
+        db.close()
+    except database.KeyExists , ex :
         dbvalues = db.get_node( args['UUID'] )
+        db.close()
         if dbvalues['hostname'] == args['HOSTNAME'] :
             # FIXME : Implement update record code
             msg = "System already registered"
@@ -49,12 +50,10 @@ def handler ( req ) :
         req.content_type = "text/plain"
         req.write( msg )
         return apache.OK
-      except database.C3DBException , ex :
+    except database.C3DBException , ex :
         req.log_error( "handler : Unexpected exception '%s' while adding node %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] ) , apache.APLOG_EMERG )
         req.status = apache.HTTP_INTERNAL_SERVER_ERROR
         return apache.OK
-    finally :
-        db.close()
 
     callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
 
