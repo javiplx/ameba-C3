@@ -73,7 +73,7 @@ def login ( url , uuid ) :
             # NOTE : login warnings could appear mixed with errors on combined operations
             if firstline :
                 errmsg.append( firstline )
-            errmsg.append( res.readlines() )
+                errmsg.append( res.readlines() )
 
     return sessid , delay
 
@@ -94,10 +94,12 @@ def logout ( url , sessid , failed=False ) :
         errmsg.extend( res.readlines() )
     else :
         firstline = res.readline().split()
-        if firstline[0] != "ID" or len(firstline) != 2 :
+        if firstline and firstline[0] != "ID" or len(firstline) != 2 :
+            return True
+        errmsg.append( "Logout failed" )
+        if firstline :
             errmsg.append( firstline )
             errmsg.extend( res.readlines() )
-        return True
 
     return False
 
