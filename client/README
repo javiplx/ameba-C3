@@ -1,0 +1,29 @@
+
+aupd
+
+Modes : register , pull , pulldaemon
+
+* register
+Register teh system in the amebaC3 server, supplying all the required
+information (hostname, distro).
+The url for amebaC3 server and the uuid are mandatory, and can be given on
+command line or taken from an already existing configuration file. The distro
+name or primary channel are guessed, although can be specified using the
+option --distro. A random uuid can be created using option --autogenerate.
+After successful registration, values supplied on command line are stored
+on config file.
+
+* pull
+* pulldaemon
+Perform the system upgrade against the configured source repositories,
+reporting to amebaC3 server. While pulldaemon starts in daemon mode, pull
+performs a single operation and exits. There are some options common to
+both operation modes to set upgrade and check modes, and to specify a random
+wait time before start the actual operation. When taken from configuration
+file, options in pull section are also accounted in the pulldaemon operation
+mode. The pulldaemon mode accepts an additional --check-interval option to
+specify the interval among runs, and option --store will rewrite configuration
+file values with those specified in command line.
+
+
+
