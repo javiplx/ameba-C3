@@ -38,7 +38,7 @@ def handler ( req ) :
         dbvalues = db.add_node( args['UUID'] , args['DISTRO'] , args['HOSTNAME'] , req )
       except database.KeyExists , ex :
         dbvalues = db.get_node( args['UUID'] )
-        if False and dbvalues['hostname'] == args['HOSTNAME'] :
+        if dbvalues['hostname'] == args['HOSTNAME'] :
             # FIXME : Implement update record code
             msg = "System already registered"
             req.log_error( "handler : %s" % msg , apache.APLOG_INFO )
