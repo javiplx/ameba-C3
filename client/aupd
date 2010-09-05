@@ -302,7 +302,7 @@ def pull ( config , options , args=() ) :
 
     cmds_parname = 'update_cmds'
     if options.check_only :
-        cmds_parname = 'update_cmds'
+        cmds_parname = 'check_cmds'
         if config.has_option( 'pull' , 'outdated_retcode' ) :
             outdated_retcode = config.getint( 'pull' , 'outdated_retcode' )
     if not config.has_option( 'pull' , cmds_parname ) :
