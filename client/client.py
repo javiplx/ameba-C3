@@ -62,8 +62,8 @@ def login ( url , uuid ) :
     try :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , ex :
-        errmsg.append( res.msg )
-        errmsg.extend( res.readlines() )
+        errmsg.append( ex.msg )
+        errmsg.extend( ex.readlines() )
     else :
         firstline = res.readline().split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
