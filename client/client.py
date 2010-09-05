@@ -44,10 +44,11 @@ def register ( url , data ) :
         errmsg.extend( res.readlines() )
     else :
         firstline = res.readline()
-        if firstline != "OK" :
+        if firstline == "OK" :
+            return True
+        if firstline :
             errmsg.append( firstline )
             errmsg.extend( res.readlines() )
-        return True
 
     return False
 
@@ -61,16 +62,15 @@ def login ( url , uuid ) :
 
     try :
         res = urllib2.urlopen( req )
-    except urllib2.HTTPError , ex :
-        errmsg.append( ex.msg )
-        errmsg.extend( ex.readlines() )
+    except urllib2.HTTPError , res :
+        errmsg.append( res.msg )
+        errmsg.extend( res.readlines() )
     else :
         firstline = res.readline().split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
             sessid = firstline[1]
             delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
         else :
-            # NOTE : login warnings could appear mixed with errors on combined operations
             if firstline :
                 errmsg.append( firstline )
                 errmsg.append( res.readlines() )
@@ -102,6 +102,18 @@ def logout ( url , sessid , failed=False ) :
             errmsg.extend( res.readlines() )
 
     return False
+
+
+def loginout ( url , uuid , failed=False ) :
+
+    sessid , delay = login( url , uuid )
+    # NOTE : login warnings will appear mixed with errors from later stages
+
+    if not sessid : 
+        errmsg.append( "Login failed" )
+        return False
+
+    return logout ( url , sessid , failed )
 
 
 import subprocess
@@ -152,16 +164,5 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
         return loginout ( url , uuid )
 
     return False
-
-
-def loginout ( url , uuid , failed=False ) :
-
-    sessid , delay = login( url , uuid )
-
-    if not sessid : 
-        errmsg.append( "Login failed" )
-        return False
-
-    return logout ( url , sessid , failed )
 
 
