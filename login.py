@@ -53,9 +53,12 @@ def authenhandler ( req ) :
             req.log_error( "authenhandler : Malformed Authorization header '%s'" % req.headers_in["Authorization"] )
             req.status = apache.HTTP_UNAUTHORIZED
             return apache.DONE
+
+        # NOTE : nagios http configuration will not go through response handler
         if type == "Basic" :
             db = database.get( database.dbtype )
             if not db.check_user_password( req.user , req.get_basic_auth_pw() ) :
+                db.close()
                 req.log_error( "authenhandler : Wrong password for user %s" % req.user )
                 # NOTE : This is a browser response, so we can perform a hard return
                 return apache.HTTP_UNAUTHORIZED
@@ -69,7 +72,7 @@ def authenhandler ( req ) :
             return apache.OK
         elif type == "UUID" :
             if uuid.find(" ") != -1 :
-                req.log_error( "authenhandler : Malformed Authorization UUID %s" % uuid )
+                req.log_error( "authenhandler : Malformed Authorization UUID '%s'" % uuid )
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
             db = database.get( database.dbtype )
@@ -89,23 +92,25 @@ def authenhandler ( req ) :
 
     sess = Session.Session( req )
     if sess.is_new() :
-        if not req.user :
+        if req.user :
+            # NOTE : proper expiration time is not set on the cookie
+            sess.set_timeout( default_session_timeout )
+            sess['UUID'] = req.user
+            sess['HOSTNAME'] = node['hostname']
+            sess['DISTRO'] = node['distro']
+            sess['CHANNELS'] = node.get( "channels" , "*" )
+            sess.save()
+            callbacks.run_stage( "alive" , ( sess ,) )
+        else :
             sess.invalidate()
             cookies = Cookie.get_cookies( req )
             if cookies.get( "pysid" ) :
                 req.log_error( "authenhandler : Trying to access with an obsolete session %s" % cookies["pysid"] )
             req.status = apache.HTTP_UNAUTHORIZED
             return apache.DONE
-        # NOTE : proper expiration time is not set on the cookie
-        sess.set_timeout( default_session_timeout )
-        sess['UUID'] = req.user
-        sess['HOSTNAME'] = node['hostname']
-        sess['DISTRO'] = node['distro']
-        sess['CHANNELS'] = node.get( "channels" , "*" )
-        sess.save()
-        callbacks.run_stage( "alive" , ( sess ,) )
     else :
         if req.user :
+            # A double authentication (header + session) is attempted
             if req.user != sess['UUID'] :
                 sess.invalidate()
                 req.log_error( "authenhandler : Requested reauthentication for '%s' with session from '%s'" % ( req.user , sess['UUID'] ) )
@@ -121,17 +126,21 @@ def authenhandler ( req ) :
                 req.user = sess['UUID']
                 req.subprocess_env['sessid'] = sess.id()
                 sess.invalidate()
+                # NOTE : We will run through the standard handler response
                 return apache.OK
             req.log_error( "authenhandler : user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
             if allow_session_refresh :
                 sess.save()
             req.user = sess['UUID']
 
+    # NOTE : we should search and remove any other existing session for this uuid
+
     # NOTE : Stopping here with DONE will not work, so we require the content handler phase for login requests
     req.subprocess_env['sessid'] = sess.id()
 
     return apache.OK
 
+# NOTE : Untested !!!
 def authzhandler ( req ) :
 
     db = database.get( database.dbtype )
