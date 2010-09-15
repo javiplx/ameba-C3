@@ -11,6 +11,7 @@ def handler ( req ) :
 
     # FIXME : reuse code to get unique UUID on args
 
+    error_msg = None
     if req.args or req.method == "POST" :
         args = util.FieldStorage(req)
         missing = []
@@ -18,18 +19,15 @@ def handler ( req ) :
             if not args.has_key( required ) :
                 missing.append( required )
         if missing :
-            msg = "%s missing" % ",".join(missing)
-            req.log_error( "handler : %s" % msg )
-            req.status = apache.HTTP_BAD_REQUEST
-            req.content_type = "text/plain"
-            req.write( msg )
-            return apache.OK
+            error_msg = "%s missing" % ",".join(missing)
     else :
-        msg = "Malformed request"
-        req.log_error( "handler : %s" % msg )
+        error_msg = "Malformed request"
+
+    if error_msg :
+        req.log_error( "handler : %s" % error_msg )
         req.status = apache.HTTP_BAD_REQUEST
         req.content_type = "text/plain"
-        req.write( msg )
+        req.write( error_msg )
         return apache.OK
 
     db = database.get( database.dbtype )
