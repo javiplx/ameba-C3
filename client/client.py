@@ -94,7 +94,7 @@ def logout ( url , sessid , failed=False ) :
         errmsg.extend( res.readlines() )
     else :
         firstline = res.readline().split()
-        if firstline and firstline[0] != "ID" or len(firstline) != 2 :
+        if firstline and firstline[0] == "ID" and len(firstline) == 2 :
             return True
         errmsg.append( "Logout failed" )
         if firstline :
