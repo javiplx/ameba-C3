@@ -15,6 +15,7 @@ configfile = "/etc/amebaC3.conf"
 config = ConfigParser.RawConfigParser()
 config.read( configfile )
 
+# NOTE : Write this as ConfigParser defaults ???
 dbroot = "/var/lib/amebaC3"
 dbname = "amebaC3"
 dbtype = "fs"
@@ -23,23 +24,23 @@ if config.has_option( 'database' , 'dbroot' ) :
     dbroot = config.get( 'database' , 'dbroot' )
 if config.has_option( 'database' , 'dbname' ) :
     dbname = config.get( 'database' , 'dbname' )
-if config.has_option( 'database' , 'type' ) :
-    type = config.get( 'database' , 'type' )
+if config.has_option( 'database' , 'dbtype' ) :
+    dbtype = config.get( 'database' , 'dbtype' )
 
 
-def get ( type ) :
+def get ( _type ) :
 
     if not os.path.isdir( dbroot ) :
         raise InternalError( "Directory %s does not exists" % dbroot )
 
     #FIXME : Check for owner and permissions
 
-    if type == "fs" :
+    if _type == "fs" :
         return fs_backend.Database( dbroot , dbname )
-    elif type == "bdb" :
+    elif _type == "bdb" :
         return bdb_backend.Database( dbroot , dbname )
 
-    raise InternalError( "Uknown database type '%s'" % type )
+    raise InternalError( "Uknown database type '%s'" % _type )
 
 
 def initialize ( db ) :
