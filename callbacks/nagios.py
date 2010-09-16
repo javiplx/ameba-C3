@@ -43,6 +43,15 @@ group_template = """define hostgroup{
 """
 
 
+def send_command ( command , hostname=None , msg=None ) :
+    fd = open( commandfile , 'a' )
+    if hostname or msg :
+        fd.write( "[%lu] %s;%s;%s\n" % ( time.time() , command , hostname , msg ) )
+    else :
+        fd.write( "[%lu] %s\n" % time.time() )
+    fd.close()
+
+
 class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
 
     def run ( self , uuid , dbvalues ) :
@@ -65,28 +74,23 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
             fd.close()
 
         if restart_allowed :
-            fd = open( commandfile , 'a' )
-            fd.write( "[%lu] RESTART_PROGRAM\n" % time.time() )
-            fd.close()
+            send_command( "RESTART_PROGRAM" )
 
 
 class NagiosHostUpdate ( __baseclass.AbstractAliveCallback ) :
 
     def run ( self , sess ) :
-        fd = open( commandfile , 'a' )
-        fd.write( "[%lu] PROCESS_HOST_CHECK_RESULT;%s;0;Ameba C3 - Logged in\n" % ( time.time() , sess['HOSTNAME'] ) )
-        fd.close()
+        send_command( "PROCESS_HOST_CHECK_RESULT" , sess['HOSTNAME'] , "0;Ameba C3 - Logged in" )
 
 
 class NagiosServiceUpdate ( __baseclass.AbstractUpdateCallback ) :
 
     def run( self , sess , status ) :
-        fd = open( commandfile , 'a' )
         if status == "OK" :
-            fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;0;Ameba C3 - Up to date\n" % ( time.time() , sess['HOSTNAME'] ) )
+            msg = "ameba updater;0;Ameba C3 - Up to date"
         elif status == "WARNING" :
-            fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;1;Ameba C3 - Updates for packages available\n" % ( time.time() , sess['HOSTNAME'] ) )
+            msg = "ameba updater;1;Ameba C3 - Updates for packages available"
         else :
-            fd.write( "[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;ameba updater;2;Ameba C3 - Failed update\n" % ( time.time() , sess['HOSTNAME'] ) )
-        fd.close()
+            msg = "ameba updater;2;Ameba C3 - Failed update"
+        send_command( "PROCESS_SERVICE_CHECK_RESULT" , sess['HOSTNAME'] , msg )
 
