@@ -28,6 +28,19 @@ class Database :
     def retrieve ( self , uuid ) :
         raise InternalError( "Unimplemented abstract method" )
 
+    def get_record( self , uuid , record_type ) :
+
+        try :
+            record = self.retrieve( uuid )
+            if record.get( 'type' ) == record_type :
+                return record
+        except KeyNotFound , ex :
+            pass
+
+        return None
+
+
+    # This block corresponds only to simple-sting based storages (file, bdb, ...)
 
     fieldsep = '&'
 
@@ -77,22 +90,19 @@ class Database :
 
         return dbvalues
 
+    # NOTE : This function does not fit very well on a database-alike interface
     def check_user_password( self , uuid , password ) :
 
         # NOTE : This prevents emtpy passwords as well as matching records without password
+        # NOTE2 : Sure ?? What about the logic behind 'is None' ??
         if password is None :
             return False
 
-        try :
-            record = self.retrieve( uuid )
-        except KeyNotFound , ex :
-            return False 
+        record = self.get_record( uuid , "user" )
 
-        if record.get( 'type' ) == "user" and record.get( 'password' ) == password :
-            return True
-
-        if record.get( 'type' ) == "user" and record.get( 'password' ) == "*" :
-            return True
+        if record :
+            if record.get( 'password' ) == password or record.get( 'password' ) == "*" :
+                return True
 
         return False
 
@@ -138,12 +148,5 @@ class Database :
 
     def get_node( self , uuid ) :
 
-        try :
-            record = self.retrieve( uuid )
-            if record.get( 'type' ) == "node" :
-                return record
-        except KeyNotFound , ex :
-            pass
-
-        return None
+        return self.get_record( uuid , "node" )
 
