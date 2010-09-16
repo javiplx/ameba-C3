@@ -15,13 +15,14 @@
 from distutils.core import setup
 
 script_name = "aupd"
-import imp , os
-aupd = imp.load_source( script_name , script_name )
-os.unlink( "%sc" % script_name )
+#import imp , os
+#aupd = imp.load_source( script_name , script_name )
+#os.unlink( "%sc" % script_name )
 
 setup(
 	name = "amebaC3_client" ,
-	version = aupd.__version__ ,
+#	version = aupd.__version__ ,
+	version = "1.3" ,
 	description = "AmebaC3 update agent" ,
 	author = "Javier Palacios" ,
 	author_email = "javiplx@gmail.com" ,
