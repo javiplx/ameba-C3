@@ -1,5 +1,5 @@
 // Send node-alive messages to Ameba C3
-APT::Update::Post-Invoke-Success {"/usr/sbin/aupd login || true";};
-DPkg::Post-Invoke {"/usr/sbin/aupd login || true";};
+APT::Update::Post-Invoke-Success {"/usr/bin/aupd login || true";};
+DPkg::Post-Invoke {"/usr/bin/aupd login || true";};
 
 // There is no 'APT::Upgrade::Post-Invoke-Success' that can be used to call service keepalive

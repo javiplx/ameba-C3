@@ -28,17 +28,18 @@ import client
 
 # NOTE : slot chosen empirically. Although before metadata download, is the later one available for check-only commands
 def exclude_hook(conduit):
-    _url = config.get( 'registration' , 'url' )
-    _uuid = config.get( 'registration' , 'uuid' )
-    client.login( _url , _uuid )
-    conduit.info(2, 'Hello world')
+#    _url = config.get( 'global' , 'url' )
+#    _uuid = config.get( 'global' , 'uuid' )
+#    client.login( _url , _uuid )
+    conduit.info(2, 'This is exclude hook')
 
 def posttrans_hook(conduit):
 
-    _url = config.get( 'registration' , 'url' )
-    _uuid = config.get( 'registration' , 'uuid' )
+#    _url = config.get( 'global' , 'url' )
+#    _uuid = config.get( 'global' , 'uuid' )
 
-    # FIXME : call only if full upgrade performed (use command line options?)
-    client.loginout ( _url , _uuid )
+#    # FIXME : call only if full upgrade performed (use command line options?)
+#    client.loginout ( _url , _uuid )
 
+    conduit.info(2, 'This is postranssaction hook')
 
