@@ -66,8 +66,7 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
         fd.write( node_template % _dbvalues )
         fd.close()
 
-        coso = []
-        fname = os.path.join( cfg_dir , "%s.cfg" % _dbvalues['distro'] )
+        fname = os.path.join( cfg_dir , "%s.cfg" % _dbvalues['distro'].replace("/"," ") )
         if not os.path.exists( fname ) :
             fd = open( fname , 'w' )
             fd.write( group_template % _dbvalues )
