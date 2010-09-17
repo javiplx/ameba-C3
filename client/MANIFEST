@@ -1,8 +1,10 @@
+README
 aupd
 __init__.py
 client.py
 daemon.py
 setup.py
 license.txt
+sample.conf
 externals/15ameba-updater
 externals/ameba-updater.py
