@@ -48,7 +48,7 @@ def send_command ( command , hostname=None , msg=None ) :
     if hostname or msg :
         fd.write( "[%lu] %s;%s;%s\n" % ( time.time() , command , hostname , msg ) )
     else :
-        fd.write( "[%lu] %s\n" % time.time() )
+        fd.write( "[%lu] %s\n" % ( time.time() , command ) )
     fd.close()
 
 
