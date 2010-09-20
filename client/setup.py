@@ -14,23 +14,17 @@
 
 from distutils.core import setup
 
-script_name = "aupd"
-#import imp , os
-#aupd = imp.load_source( script_name , script_name )
-#os.unlink( "%sc" % script_name )
-
 setup(
 	name = "amebaC3_client" ,
-#	version = aupd.__version__ ,
 	version = "1.3" ,
 	description = "AmebaC3 update agent" ,
 	author = "Javier Palacios" ,
 	author_email = "javiplx@gmail.com" ,
 	url = "http://wiki.github.com/javiplx/ameba-C3" ,
-	scripts = [ script_name ] ,
+	scripts = [ "aupd" ] ,
 	package_dir = { 'amebaC3_client':"" } ,
 	packages = [ "amebaC3_client" ] ,
-#	package_data = { 'amebaC3_client': [ "externals/15ameba-updater" , "externals/ameba-updater.py" ] } ,
+#	package_data = { 'amebaC3_client': [ "sample.conf" , "externals/15ameba-updater" , "externals/ameba-updater.py" ] } ,
 	license = "GPLv2"
 	)
 
