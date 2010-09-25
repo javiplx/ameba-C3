@@ -1,1 +1,5 @@
+include INSTALL
 include license.txt
+include callbacks/amebaC3_templates.cfg
+include callbacks/ameba_freshness_exceeded.sh
+include amebaC3_sample.conf
