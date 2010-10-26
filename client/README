@@ -10,8 +10,8 @@ The url for amebaC3 server and the uuid are mandatory, and can be given on
 command line or taken from an already existing configuration file. The distro
 name or primary channel are guessed, although can be specified using the
 option --distro. A random uuid can be created using option --autogenerate.
-After successful registration, values supplied on command line are stored
-on config file.
+After successful registration, values generated or supplied on command line
+are stored on config file.
 
 * pull
 * pulldaemon

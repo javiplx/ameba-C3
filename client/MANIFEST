@@ -6,5 +6,6 @@ daemon.py
 setup.py
 license.txt
 sample.conf
+crontab.line
 externals/15ameba-updater
 externals/ameba-updater.py
