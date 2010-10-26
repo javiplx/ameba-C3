@@ -335,13 +335,14 @@ def pull ( config , options , args=() ) :
     _uuid = config.get( 'global' , 'uuid' )
 
     ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , outdated_retcode )
-    if ret :
-        if amebaC3_client.client.has_errmsg() :
+    if not options.silent :
+        if ret :
+            if amebaC3_client.client.has_errmsg() :
+                for msg in amebaC3_client.client.get_all_errmsg() :
+                    logger.warning( msg )
+        else :
             for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
+                logger.error( msg )
 
     return ret
 
@@ -443,6 +444,10 @@ parser.add_option("--random-wait",
 parser.add_option("--store",
         action="store_true", dest="store", default=False,
         help="Store current parameter values into configuration file")
+
+parser.add_option("--silent",
+        action="store_true", dest="silent", default=False,
+        help="Run in silent mode (for con-based execution)")
 
 
 import sys
