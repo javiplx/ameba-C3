@@ -352,9 +352,9 @@ import threading
 def __pulldaemon ( config , options ) :
 
     # NOTE : logging of warnings should be disabled
-    pull( config , options )
     timerid = threading.Timer( options.interval , __pulldaemon , ( config , options ) )
     timerid.start()
+    pull( config , options )
 
 import amebaC3_client.daemon
 
