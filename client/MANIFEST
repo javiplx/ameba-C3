@@ -8,5 +8,6 @@ setup.py
 license.txt
 sample.conf
 crontab.line
+ameba-updater
 externals/15ameba-updater
 externals/ameba-updater.py

@@ -1,0 +1,54 @@
+#!/bin/sh
+
+PROGRAM=/usr/bin/aupd
+
+[ ! -x ${PROGRAM} ] && exit
+
+start() {
+    pid=`pgrep -f -P 1 ${PROGRAM}`
+    if [ -n "${pid}" ] ; then
+        echo "Already started"
+    else
+        echo "Starting"
+        ${PROGRAM} pulldaemon
+    fi
+}
+
+stop() {
+    pid=`pgrep -f -P 1 ${PROGRAM}`
+    if [ -n "${pid}" ] ; then
+        echo "Stopping"
+        kill -TERM ${pid}
+    else
+        echo "Already stopped"
+    fi
+}
+
+status() {
+    pid=`pgrep -f -P 1 ${PROGRAM}`
+    if [ -n "${pid}" ] ; then
+        echo "Running"     
+        exit 0             
+    else                   
+        echo "Stopped"     
+        exit 1             
+    fi                     
+}                          
+                           
+case "$1" in               
+  start)                   
+    start                  
+    ;;                     
+  stop)                    
+    stop                   
+    ;;                     
+  status)                  
+    status                 
+    ;;                     
+  *)                       
+    echo "Usage: $0 start|stop"
+    exit 1                 
+esac                       
+
+exit $?                    
+
