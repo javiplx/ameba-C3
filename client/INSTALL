@@ -1,0 +1,15 @@
+
+Deshacemos el bicho
+
+ejecutamos setup.py install
+
+Metemos el cron :
+* add proper pull section
+* cat crontab.line >> /etc/crontab
+
+En plan demonio ( falta initscript ) :
+* add proper pulldaemon section
+* add proper pull section (check-only and random-wait might not be honoured, depending on pulldaemon)
+
+* start daemon
+
