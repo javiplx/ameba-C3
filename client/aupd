@@ -79,7 +79,10 @@ def store_config( config ) :
     fd.close()
 
 
-import uuid
+try :
+    import uuid
+except :
+    uuid = False
 import socket
 
 def register ( config , options , args ) :
@@ -118,6 +121,9 @@ def register ( config , options , args ) :
         return False
 
     if options.autouuid :
+        if not uuid :
+            logger.error( "Supply explicit UUID, no python module available for autogeneration" )
+            return False
         _uuid = uuid.uuid4()
 
     if config.has_option( 'global' , 'uuid' ) :
