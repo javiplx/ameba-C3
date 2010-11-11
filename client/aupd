@@ -435,7 +435,7 @@ parser.add_option("--check-only",
         action="store_true", dest="check_only",
         help="Perform only a check for updates")
 
-parser.add_option("--force-upgrade",
+parser.add_option("--force-upgrade", default=True,
         action="store_false", dest="check_only",
         help="Force a system upgrade")
 
