@@ -1,2 +1,2 @@
 
-0 *  * * * root /usr/bin/aupd --random-wait 120 pull
+0 *  * * * root /usr/bin/aupd --silent --random-wait 120 pull
