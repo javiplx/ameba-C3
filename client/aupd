@@ -431,11 +431,11 @@ parser.add_option("--distro", dest="distro",
 parser.add_option("--sessid", dest="sessid",
         help="Set session ID")
 
-parser.add_option("--check-only",
+parser.add_option("--check-only", default=True,
         action="store_true", dest="check_only",
         help="Perform only a check for updates")
 
-parser.add_option("--force-upgrade", default=True,
+parser.add_option("--force-upgrade",
         action="store_false", dest="check_only",
         help="Force a system upgrade")
 
