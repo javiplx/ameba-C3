@@ -1,5 +1,24 @@
 #!/bin/sh
 
+# Copyright (C) 2010 Javier Palacios
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License Version 2
+# as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+
+# ameba-updater          Start/Stop the amebaC3 client daemon.
+#
+# chkconfig: 2345 90 60
+# description: aupd is the agent program of amebaC3, in charge of perform \
+#              the system status verifications and upgrades
+# processname: aupd
+# config: /etc/aupd.conf
+
 PROGRAM=/usr/bin/aupd
 
 [ ! -x ${PROGRAM} ] && exit
