@@ -16,7 +16,7 @@ from distutils.core import setup
 
 setup(
 	name = "amebaC3_client" ,
-	version = "1.3.1" ,
+	version = "1.3.2" ,
 	description = "AmebaC3 update agent" ,
 	author = "Javier Palacios" ,
 	author_email = "javiplx@gmail.com" ,
