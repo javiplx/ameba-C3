@@ -114,6 +114,7 @@ def register ( config , options , args ) :
 
     if args :
         _uuid = args.pop(0)
+        uuid_location = "command line"
         options.store = True
 
     if config.has_option( 'global' , 'uuid' ) :
@@ -124,10 +125,11 @@ def register ( config , options , args ) :
             logger.warning( "UUID already given on configuration file" )
         else :
             _uuid = config.get( 'global' , 'uuid' )
+            uuid_location = "configuration file"
 
     if options.autouuid :
         if _uuid :
-            logger.error( "Autogeneration requested with UUID given in configuration or command line" )
+            logger.error( "Autogeneration requested with UUID given in %s" % uuid_location )
             return False
         if not uuid :
             logger.error( "Supply explicit UUID, no python module available for autogeneration" )
