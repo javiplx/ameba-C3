@@ -44,29 +44,28 @@ def handler ( req ) :
     try :
         dbvalues = db.add_node( args['UUID'] , args['DISTRO'] , args['HOSTNAME'] , req )
         db.close()
+        callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
     except database.KeyExists , ex :
         dbvalues = db.get_node( args['UUID'] )
         db.close()
         if dbvalues['hostname'] == args['HOSTNAME'] :
             # FIXME : Implement update record code
-            msg = "OK\nSystem already registered"
-            req.log_error( "handler : %s" % msg , apache.APLOG_INFO )
+            error_msg = "System already registered"
+            req.log_error( "handler : %s" % error_msg , apache.APLOG_INFO )
         else :
-            msg = "node '%s' has UUID %s" % ( dbvalues['hostname'] , ex.message )
-            req.log_error( "handler : %s" % msg )
+            error_msg = "node '%s' has UUID %s" % ( dbvalues['hostname'] , ex.message )
+            req.log_error( "handler : %s" % error_msg )
             req.status = apache.HTTP_BAD_REQUEST 
-        req.content_type = "text/plain"
-        req.write( msg )
-        return apache.OK
     except database.C3DBException , ex :
         db.close()
         req.log_error( "handler : Unexpected exception '%s' while adding node %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] ) , apache.APLOG_EMERG )
         req.status = apache.HTTP_INTERNAL_SERVER_ERROR
         return apache.OK
 
-    callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
-
     req.content_type = "text/plain"
-    req.write( "OK" )
+    if req.status != apache.HTTP_BAD_REQUEST :
+        req.write( "OK" )
+    if error_msg :
+        req.write( error_msg )
     return apache.OK
 
