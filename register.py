@@ -21,7 +21,7 @@ def handler ( req ) :
 
     # FIXME : reuse code to get unique UUID on args
 
-    error_msg = None
+    error_msg = []
     if req.args or req.method == "POST" :
         args = util.FieldStorage(req)
         missing = []
@@ -29,15 +29,15 @@ def handler ( req ) :
             if not args.has_key( required ) :
                 missing.append( required )
         if missing :
-            error_msg = "%s missing" % ",".join(missing)
+            error_msg.append( "%s missing" % ",".join(missing) )
     else :
-        error_msg = "Malformed request"
+        error_msg.append( "Malformed request" )
 
     if error_msg :
-        req.log_error( "handler : %s" % error_msg )
+        map( lambda x : req.log_error( "handler : %s" % x ) , error_msg )
         req.status = apache.HTTP_BAD_REQUEST
         req.content_type = "text/plain"
-        req.write( error_msg )
+        req.write( "\n".join( error_msg ) )
         return apache.OK
 
     db = database.get( database.dbtype )
@@ -50,11 +50,11 @@ def handler ( req ) :
         db.close()
         if dbvalues['hostname'] == args['HOSTNAME'] :
             # FIXME : Implement update record code
-            error_msg = "\nSystem already registered"
-            req.log_error( "handler : %s" % error_msg , apache.APLOG_INFO )
+            error_msg.append( "System already registered" )
+            map( lambda x : req.log_error( "handler : %s" % x , apache.APLOG_INFO ) , error_msg )
         else :
-            error_msg = "node '%s' has UUID %s" % ( dbvalues['hostname'] , ex.message )
-            req.log_error( "handler : %s" % error_msg )
+            error_msg.append( "node '%s' has UUID %s" % ( dbvalues['hostname'] , ex.message ) )
+            map( lambda x : req.log_error( "handler : %s" % x ) , error_msg )
             req.status = apache.HTTP_BAD_REQUEST 
     except database.C3DBException , ex :
         db.close()
@@ -64,8 +64,7 @@ def handler ( req ) :
 
     req.content_type = "text/plain"
     if req.status != apache.HTTP_BAD_REQUEST :
-        req.write( "OK" )
-    if error_msg :
-        req.write( error_msg )
+        error_msg.insert( 0 , "OK" )
+    req.write( "\n".join( error_msg ) )
     return apache.OK
 
