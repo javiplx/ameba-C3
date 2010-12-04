@@ -49,6 +49,7 @@ def handler ( req ) :
         req.write( msg )
         return apache.OK
     except database.C3DBException , ex :
+        db.close()
         req.log_error( "handler : Unexpected exception '%s' while adding node %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] ) , apache.APLOG_EMERG )
         req.status = apache.HTTP_INTERNAL_SERVER_ERROR
         return apache.OK
