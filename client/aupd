@@ -116,16 +116,6 @@ def register ( config , options , args ) :
         _uuid = args.pop(0)
         options.store = True
 
-    if _uuid and options.autouuid :
-        logger.error( "You should not give explicit UUID when requesting autogeneration" )
-        return False
-
-    if options.autouuid :
-        if not uuid :
-            logger.error( "Supply explicit UUID, no python module available for autogeneration" )
-            return False
-        _uuid = uuid.uuid4()
-
     if config.has_option( 'global' , 'uuid' ) :
         if _uuid :
             if _uuid != config.get( 'global' , 'uuid' ) :
@@ -134,6 +124,15 @@ def register ( config , options , args ) :
             logger.warning( "UUID already given on configuration file" )
         else :
             _uuid = config.get( 'global' , 'uuid' )
+
+    if options.autouuid :
+        if _uuid :
+            logger.error( "Autogeneration requested with UUID given in configuration or command line" )
+            return False
+        if not uuid :
+            logger.error( "Supply explicit UUID, no python module available for autogeneration" )
+            return False
+        _uuid = uuid.uuid4()
 
     if not _uuid :
         errors.append( "UUID" )
