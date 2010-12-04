@@ -37,6 +37,8 @@ def get_all_errmsg () :
 
 def register ( url , data ) :
 
+    ret = False
+
     try :
         res = urllib2.urlopen( "%s/register" % url , urllib.urlencode( data ) )
     except urllib2.HTTPError , res :
@@ -45,12 +47,12 @@ def register ( url , data ) :
     else :
         firstline = res.readline()
         if firstline == "OK" :
-            return True
-        if firstline :
+            ret = True
+        else :
             errmsg.append( firstline )
-            errmsg.extend( res.readlines() )
+        errmsg.extend( res.readlines() )
 
-    return False
+    return ret
 
 
 def login ( url , uuid ) :
