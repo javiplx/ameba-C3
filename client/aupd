@@ -27,7 +27,7 @@ config.read( configfile )
 
 usage = """
 \t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
-\t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] pulldaemon
+\t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] [--logfile filename] pulldaemon
 \t%prog [--random-wait seconds] [--check-only|--force-upgrade] pull
 \t%prog login
 \t%prog --sessid id logout
@@ -397,8 +397,7 @@ def pulldaemon ( config , options , args ) :
             config.set( 'pulldaemon' , 'check-only' , options.check_only )
         store_config( config )
 
-    # FIXME : Turn this into configurable value, or use sensible filename at least
-    amebaC3_client.daemon.REDIRECT_TO = "/tmp/ameba.log"
+    amebaC3_client.daemon.REDIRECT_TO = options.logfile
     open( amebaC3_client.daemon.REDIRECT_TO , "a" ).close()
     retcode = amebaC3_client.daemon.createDaemon()
 
@@ -445,6 +444,9 @@ parser.add_option("--check-interval",
 parser.add_option("--random-wait",
 	dest="wait", type="float",
         help="Set maximum random waiting time")
+
+parser.add_option("--logfile", dest="logfile", default="/var/log/ameba_updater.log",
+        help="Specify logfile for daemon")
 
 parser.add_option("--store",
         action="store_true", dest="store", default=False,
