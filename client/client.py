@@ -45,7 +45,7 @@ def register ( url , data ) :
         errmsg.append( res.msg )
         errmsg.extend( res.readlines() )
     else :
-        firstline = res.readline()
+        firstline = res.readline().splitlines()[0]
         if firstline == "OK" :
             ret = True
         else :
@@ -68,7 +68,7 @@ def login ( url , uuid ) :
         errmsg.append( res.msg )
         errmsg.extend( res.readlines() )
     else :
-        firstline = res.readline().split()
+        firstline = res.readline().splitlines()[0].split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
             sessid = firstline[1]
             delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
@@ -95,7 +95,7 @@ def logout ( url , sessid , failed=False ) :
         errmsg.append( res.msg )
         errmsg.extend( res.readlines() )
     else :
-        firstline = res.readline().split()
+        firstline = res.readline().splitlines()[0].split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
             return True
         errmsg.append( "Logout failed" )

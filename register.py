@@ -50,7 +50,7 @@ def handler ( req ) :
         db.close()
         if dbvalues['hostname'] == args['HOSTNAME'] :
             # FIXME : Implement update record code
-            error_msg = "System already registered"
+            error_msg = "\nSystem already registered"
             req.log_error( "handler : %s" % error_msg , apache.APLOG_INFO )
         else :
             error_msg = "node '%s' has UUID %s" % ( dbvalues['hostname'] , ex.message )
