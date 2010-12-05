@@ -75,6 +75,7 @@ def authenhandler ( req ) :
                 req.log_error( "authenhandler : Malformed Authorization UUID '%s'" % uuid )
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
+            req.user = uuid
             db = database.get( database.dbtype )
             node = db.get_node( uuid )
             db.close()
@@ -83,7 +84,6 @@ def authenhandler ( req ) :
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
             req.log_error( "authenhandler : user '%s' from UUID Authentication" % uuid , apache.APLOG_INFO )
-            req.user = uuid
         else :
             req.log_error( "authenhandler : Unknown Authorization type '%s'" % type )
             req.status = apache.HTTP_UNAUTHORIZED
