@@ -1,25 +1,39 @@
 
 #include "ameba-utils.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <limits.h>
 
 
-#define AMEBA_UPDATER_CONFIG_FILE "/etc/aupd.conf"
 #define AMEBA_UPDATER_MAIN_SECTION "global"
 
 
 // TODO : List alternatives for glib .ini library
 
+GKeyFile *allocate_configuration( void ) {
+    GKeyFile *config = g_key_file_new();
+    return config;
+}
+
 GKeyFile *get_configuration ( void ) {
 
-    GKeyFile *config = g_key_file_new();
+    GKeyFile *config = allocate_configuration();
 
     if ( g_key_file_load_from_file( config , AMEBA_UPDATER_CONFIG_FILE , G_KEY_FILE_KEEP_COMMENTS , NULL ) )
         return config;
 
     g_key_file_free( config );
     return NULL;
+}
+
+void save_configuration ( GKeyFile * config ) {
+    FILE *fd;
+    if ( fd = fopen( AMEBA_UPDATER_CONFIG_FILE , "w" ) ) {
+        fprintf( fd , "%s" , g_key_file_to_data( config , NULL , NULL ) );
+        fclose( fd );
+    }
+    free_configuration( config );
 }
 
 void free_configuration ( GKeyFile * config ) {
@@ -45,6 +59,11 @@ int check_configuration ( GKeyFile *config , int check_uuid ) {
 char *get_configuration_value ( GKeyFile *config , const char *key ) {
     return g_key_file_get_value( config , AMEBA_UPDATER_MAIN_SECTION , key , NULL );
 }
+
+void set_configuration_value( GKeyFile *config , const char *key , const char *value ) {
+    g_key_file_set_value( config , AMEBA_UPDATER_MAIN_SECTION , key , value );
+}
+
 
 /* Create and populate the node info structure */
 

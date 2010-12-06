@@ -2,7 +2,7 @@
 #include "ameba-utils.h"
 
 #include <getopt.h>
-
+#include <sys/stat.h>
 #include <string.h> // For memset
 
 
@@ -98,12 +98,25 @@ int main ( int argc, char* argv[] ) {
 
     if ( strcmp( argv[optind] , "register" ) == 0 ) {
 
+        struct stat fileinfo;
+        if ( ! stat( AMEBA_UPDATER_CONFIG_FILE , &fileinfo ) ) {
+            printf( "Delete current configuration %s if you pretend to re-register this system\n" , AMEBA_UPDATER_CONFIG_FILE );
+            exit(3);
+            }
+
         nodeinfo *nodedata = get_nodeinfo( argv[optind+2] , distroname );
         if ( ! nodedata ) {
             exit(-255);
             }
 
-        register_node( argv[optind+1] , nodedata );
+        int write_config = 0;
+        register_node( argv[optind+1] , nodedata , &write_config );
+        if ( write_config ) {
+            GKeyFile *config = allocate_configuration();
+            set_configuration_value( config , "url" , argv[optind+1] );
+            set_configuration_value( config , "uuid" , argv[optind+2] );
+            save_configuration( config );
+        }
 
         free_nodeinfo( nodedata );
     }

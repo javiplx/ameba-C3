@@ -39,12 +39,18 @@ size_t null_reader( void *ptr, size_t size, size_t nmemb, void *userdata) {
     return size * nmemb;
 }
 
+size_t register_reader( void *ptr, size_t size, size_t nmemb, void *userdata) {
+    if ( (size*nmemb==2) && (strncmp(ptr,"OK",2)==0) )
+        *((int*)userdata) = 1;
+    return size * nmemb;
+}
+
 size_t sessid_reader( void *ptr, size_t size, size_t nmemb, void *userdata) {
     sscanf( ptr , "ID %s" , userdata );
     return size * nmemb;
 }
 
-void register_node( const char *server_url , const nodeinfo *nodedata ) {
+void register_node( const char *server_url , const nodeinfo *nodedata , int *ret ) {
     size_t url_len = strlen(server_url) + 10;
     char *url = malloc( url_len * sizeof(char) );
     snprintf( url , url_len , "%s/register", server_url ); 
@@ -55,7 +61,8 @@ void register_node( const char *server_url , const nodeinfo *nodedata ) {
     snprintf( postdata , 256 , "UUID=%s&HOSTNAME=%s&DISTRO=%s", nodedata->uuid , nodedata->hostname , nodedata->distro ); 
     curl_easy_setopt( request , CURLOPT_POSTFIELDS , postdata);
 
-    curl_easy_setopt( request , CURLOPT_WRITEFUNCTION , null_reader );
+    curl_easy_setopt( request , CURLOPT_WRITEFUNCTION , register_reader );
+    curl_easy_setopt( request , CURLOPT_WRITEDATA , ret );
 
     do_webrequest( request );
 

@@ -19,7 +19,7 @@ void free_nodeinfo( nodeinfo * );
 CURL *build_webclient ( const char * );
 void do_webrequest( CURL * );
 
-void register_node( const char * , const nodeinfo * );
+void register_node( const char * , const nodeinfo * , int * );
 
 void login_node( const char * , const char * , char * );
 
