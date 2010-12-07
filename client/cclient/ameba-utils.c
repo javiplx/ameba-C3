@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
+#include <unistd.h>
 
 
 #define AMEBA_UPDATER_MAIN_SECTION "global"
@@ -78,8 +78,8 @@ nodeinfo *get_nodeinfo( const char *uuid , const char *distro ) {
     nodedata->uuid = (char *) malloc( strlen(uuid) * sizeof(char) );
     strcpy( nodedata->uuid , uuid );
 
-    nodedata->hostname = (char *) malloc( HOST_NAME_MAX * sizeof(char) );
-    if ( gethostname( nodedata->hostname , HOST_NAME_MAX ) ) {
+    nodedata->hostname = (char *) malloc( _SC_HOST_NAME_MAX * sizeof(char) );
+    if ( gethostname( nodedata->hostname , _SC_HOST_NAME_MAX ) ) {
         free_nodeinfo( nodedata );
         return NULL;
         }
