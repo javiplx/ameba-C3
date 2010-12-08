@@ -1,9 +1,29 @@
 
+/* Copyright (C) 2010 Javier Palacios
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License Version 2
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details. */
+
+
 #include "ameba-utils.h"
 
 #include <getopt.h>
 
 #include <string.h> // For memset
+
+
+void print_usage ( char * prog ) {
+    printf( "%s [--requestuuid] [--distro distroname] register url [uuid]\n"
+            "%s [--random-wait seconds] [--check-only|--force-upgrade] pull\n"
+            "%s login\n"
+            "%s loginout\n" , prog , prog , prog , prog );
+}
 
 
 static struct option long_options[] = {
@@ -37,7 +57,7 @@ int main ( int argc, char* argv[] ) {
     valid_args = argc - ( optind - 1 );
 
     if ( valid_args < 2 ) {
-        printf( "Usage full : --distro distroname register url uuid | login | loginout status\n" );
+        print_usage( argv[0] );
         exit(1);
     }
 

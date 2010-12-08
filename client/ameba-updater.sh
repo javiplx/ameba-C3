@@ -1,7 +1,30 @@
 #!/bin/sh
 
+# Copyright (C) 2010 Javier Palacios
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License Version 2
+# as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+
 
 distroname=`uci get webif.general.firmware_name`
+
+progname=$0
+
+print_usage () {
+    prog=$1
+cat <<EOF
+${prog} [--requestuuid] [--distro distroname] register url [uuid]
+${prog} [--random-wait seconds] [--check-only|--force-upgrade] pull
+${prog} login
+${prog} loginout
+EOF
+}
 
 while getopts "d:" opt ; do
 
@@ -64,6 +87,10 @@ case $action in
       sessid=$2
       fi
     response=`wget -q --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" -O - "${url}/logoff"`
+    ;;
+
+  *)
+    print_usage ${progname}
     ;;
 
   esac
