@@ -42,9 +42,18 @@ def handler ( req ) :
 
     db = database.get( database.dbtype )
     try :
+        if args['UUID'] == "__REQUEST__" :
+            import uuid
+            args['UUID'] = uuid.uuid4()
+            error_msg.append( "UUID %s" % args['UUID'] )
         dbvalues = db.add_node( args['UUID'] , args['DISTRO'] , args['HOSTNAME'] , req )
         db.close()
         callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
+    except ImportError , ex :
+        db.close()
+        error_msg.append( "UUID cannot be returned" )
+        req.log_error( "handler : uuid module not available to fulfill __REQUEST__ petition from %s" % args['HOSTNAME'] , apache.APLOG_CRIT )
+        req.status = apache.HTTP_BAD_REQUEST 
     except database.KeyExists , ex :
         dbvalues = db.get_node( args['UUID'] )
         db.close()
