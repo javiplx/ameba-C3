@@ -20,20 +20,22 @@ progname=$0
 print_usage () {
     prog=$1
 cat <<EOF
-${prog} [--requestuuid] [--d distroname] register url [uuid]
+${prog} [-r] [--d distroname] register url [uuid]
 ${prog} [-w seconds] [--check-only|--force-upgrade] pull
 ${prog} login
 ${prog} loginout
 EOF
 }
 
-while getopts "d:w:" opt ; do
+while getopts "rd:w:" opt ; do
 
   case $opt in
     d) test "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
        distroname=${OPTARG}
        ;;
     w) random_wait=${OPTARG}
+       ;;
+    r) requestuuid="Y"
        ;;
     *) print_usage
        exit 1
@@ -48,6 +50,12 @@ shift $OPTIND
 case $action in
 
   register)
+    if [ -n "${requestuuid}" ] ; then
+      if [ $# -eq 2 -a $2 != "__REQUEST__" ] ; then
+        echo "ERROR : Unallowed request for UUID when a value is supplied on command line"
+        fi
+      set -- $1 __REQUEST__
+      fi
     if [ $# -ne 2 ] ; then
       echo "ERROR : register bad usage"
       exit 1
@@ -57,6 +65,10 @@ case $action in
     distroname=`echo $distroname | tr ' ' '_'`
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
     response=`wget -q -O - "${url}/register?${postdata}"`
+    if [ ${uuid} = "__REQUEST__" ] ; then
+      uuid=`echo $response | sed -n -e 's/^UUID //p'`
+      response=`echo $response | grep -v '^UUID'`
+      fi
     if [ "${response}" = "OK" ] ; then
       uci set aupd.main=global
       uci set aupd.main.url=${url}
