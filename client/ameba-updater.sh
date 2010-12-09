@@ -13,24 +13,30 @@
 
 
 distroname=`uci get webif.general.firmware_name`
+random_wait=""
 
 progname=$0
 
 print_usage () {
     prog=$1
 cat <<EOF
-${prog} [--requestuuid] [--distro distroname] register url [uuid]
-${prog} [--random-wait seconds] [--check-only|--force-upgrade] pull
+${prog} [--requestuuid] [--d distroname] register url [uuid]
+${prog} [-w seconds] [--check-only|--force-upgrade] pull
 ${prog} login
 ${prog} loginout
 EOF
 }
 
-while getopts "d:" opt ; do
+while getopts "d:w:" opt ; do
 
   case $opt in
     d) test "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
        distroname=${OPTARG}
+       ;;
+    w) random_wait=${OPTARG}
+       ;;
+    *) print_usage
+       exit 1
        ;;
     esac
     
@@ -88,6 +94,28 @@ case $action in
       fi
     response=`wget -q --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" -O - "${url}/logoff"`
     ;;
+
+  pull)                                                                                                                                                     
+    if [ $# -ne 0 ] ; then                                                                                                                                  
+      echo "ERROR : pull bad usage"                                                                                                                         
+      exit 1                                                                                                                                                
+      fi                                                                                                                                                    
+    test -n "${random_wait}" && sleep ${random_wait}
+    ipkg -V 0 update && ipkg -test upgrade | grep -q '^Upgrading '                                                                                          
+    if [ $? -eq 1 ] ; then                                                                                                                                  
+      status="OK"                                                                                                                                           
+    else                                                                                                                                                    
+      status="WARNING"                                                                                                                                      
+      fi                                                                                                                                                    
+    url=`uci get aupd.main.url`                                                                                                                             
+    uuid=`uci get aupd.main.uuid`                                                                                                                           
+    response=`wget -q --header "Authorization: UUID ${uuid}" -O - "${url}/login"`                                                                           
+    set -- `echo $response | head -1`                                                                                                                       
+    if [ $# -eq 2 -a "$1" = "ID" ] ; then                                                                                                                   
+      sessid=$2                                                                                                                                             
+      fi                                                                                                                                                    
+    response=`wget -q --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" -O - "${url}/logoff"`                                          
+    ;;                                                                                                                                                      
 
   *)
     print_usage ${progname}
