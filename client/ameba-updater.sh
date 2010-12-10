@@ -45,7 +45,7 @@ while getopts "rd:w:" opt ; do
   done
 
 eval action=\$$OPTIND
-shift $OPTIND
+test -n "${action}" && shift $OPTIND
 
 case $action in
 
