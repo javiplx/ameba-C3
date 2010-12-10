@@ -161,9 +161,6 @@ def register ( config , options , args ) :
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
     if amebaC3_client.client.register( _url , data ) :
-        if amebaC3_client.client.has_errmsg() :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
         # FIXME : If we supply url & uuid on command line matching those in config file, we will rewrite it
         #         Giving only url will not overwrite as store flag is set back to False
         # A temporary solution is to check before writing that new info is being added
@@ -173,9 +170,6 @@ def register ( config , options , args ) :
             config.set( 'global' , 'url' , _url )
             config.set( 'global' , 'uuid' , _uuid )
             store_config( config )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
 
     return True
 
@@ -220,12 +214,6 @@ def login ( config , options , args ) :
         print "session id : %s" % sessid
         if delay :
             print "activated in %s seconds" % delay
-        if amebaC3_client.client.has_errmsg() :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
 
     return True
 
@@ -249,12 +237,6 @@ def logout ( config , options , args ) :
 
     if amebaC3_client.client.logout ( _url , options.sessid ) :
         logger.info( "Session closed : %s" % options.sessid )
-        if amebaC3_client.client.has_errmsg() :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
 
     return True
 
@@ -272,13 +254,7 @@ def loginout ( config , options , args ) :
     _url = config.get( 'global' , 'url' )
     _uuid = config.get( 'global' , 'uuid' )
 
-    if amebaC3_client.client.loginout ( _url , _uuid ) :
-        if amebaC3_client.client.has_errmsg() :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
+    amebaC3_client.client.loginout ( _url , _uuid )
 
     return True
 
@@ -315,6 +291,9 @@ def pull ( config , options , args=() ) :
         if config.has_option( 'pull' , 'check-only' ) :
             options.check_only = config.getboolean( 'pull' , 'check-only' )
 
+    if options.silent :
+        logger.setLevel(logging.CRITICAL)
+
     outdated_retcode = 0
 
     cmds_parname = 'update_cmds'
@@ -341,17 +320,7 @@ def pull ( config , options , args=() ) :
     _url = config.get( 'global' , 'url' )
     _uuid = config.get( 'global' , 'uuid' )
 
-    ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , outdated_retcode )
-    if not options.silent :
-        if ret :
-            if amebaC3_client.client.has_errmsg() :
-                for msg in amebaC3_client.client.get_all_errmsg() :
-                    logger.warning( msg )
-        else :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.error( msg )
-
-    return ret
+    return amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , outdated_retcode )
 
 
 import threading

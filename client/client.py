@@ -17,7 +17,8 @@ __version__ = 1.0
 import urllib , urllib2
 
 
-logger = None
+import logging
+logger = logging.getLogger()
 
 
 def register ( url , data ) :
@@ -33,9 +34,10 @@ def register ( url , data ) :
         firstline = res.readline().splitlines()[0]
         if firstline == "OK" :
             ret = True
+            map( logger.warning , res.readlines() )
         else :
             logger.error( firstline )
-        map( logger.error , res.readlines() )
+            map( logger.error , res.readlines() )
 
     return ret
 
@@ -83,7 +85,6 @@ def logout ( url , sessid , failed=False ) :
     else :
         firstline = res.readline().splitlines()[0].split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
-            logger.error( "FUE BIEN" )
             return True
         logger.error( "Logout failed" )
         if firstline :
@@ -119,7 +120,7 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
 
     if delay : 
         # NOTE : this message will be reported along subsequent errors
-        logger.error( "sleping %s secs until session gets active" % delay )
+        logger.warning( "sleping %s secs until session gets active" % delay )
         time.sleep( delay )
 
     # NOTE : As we are using external updaters, we need to use loginout instead of logout to end session
