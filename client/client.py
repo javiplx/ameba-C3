@@ -17,22 +17,7 @@ __version__ = 1.0
 import urllib , urllib2
 
 
-errmsg = []
-
-def has_errmsg () :
-    if errmsg :
-        return True
-    return False
-
-def get_errmsg () :
-    return errmsg.pop(0)
-
-def get_all_errmsg () :
-    msgs = []
-    while has_errmsg() :
-        msgs.append( get_errmsg() )
-    return msgs
-
+logger = None
 
 
 def register ( url , data ) :
@@ -42,15 +27,15 @@ def register ( url , data ) :
     try :
         res = urllib2.urlopen( "%s/register" % url , urllib.urlencode( data ) )
     except urllib2.HTTPError , res :
-        errmsg.append( res.msg )
-        errmsg.extend( res.readlines() )
+        logger.error( res.msg )
+        map( logger.error , res.readlines() )
     else :
         firstline = res.readline().splitlines()[0]
         if firstline == "OK" :
             ret = True
         else :
-            errmsg.append( firstline )
-        errmsg.extend( res.readlines() )
+            logger.error( firstline )
+        map( logger.error , res.readlines() )
 
     return ret
 
@@ -65,8 +50,8 @@ def login ( url , uuid ) :
     try :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
-        errmsg.append( res.msg )
-        errmsg.extend( res.readlines() )
+        logger.error( res.msg )
+        map( logger.error , res.readlines() )
     else :
         firstline = res.readline().splitlines()[0].split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
@@ -75,8 +60,8 @@ def login ( url , uuid ) :
         else :
             # NOTE : login warnings could appear mixed with errors on combined operations
             if firstline :
-                errmsg.append( firstline )
-                errmsg.append( res.readlines() )
+                logger.error( firstline )
+                map( logger.error , res.readlines() )
 
     return sessid , delay
 
@@ -93,16 +78,17 @@ def logout ( url , sessid , failed=False ) :
     try :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
-        errmsg.append( res.msg )
-        errmsg.extend( res.readlines() )
+        logger.error( res.msg )
+        map( logger.error , res.readlines() )
     else :
         firstline = res.readline().splitlines()[0].split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
+            logger.error( "FUE BIEN" )
             return True
-        errmsg.append( "Logout failed" )
+        logger.error( "Logout failed" )
         if firstline :
-            errmsg.append( firstline )
-            errmsg.extend( res.readlines() )
+            logger.error( firstline )
+            map( logger.error , res.readlines() )
 
     return False
 
@@ -113,7 +99,7 @@ def loginout ( url , uuid , failed=False ) :
     # NOTE : login warnings will appear mixed with errors from later stages
 
     if not sessid : 
-        errmsg.append( "Login failed" )
+        logger.error( "Login failed" )
         return False
 
     return logout ( url , sessid , failed )
@@ -128,12 +114,12 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
     sessid , delay = login( url , uuid )
 
     if not sessid : 
-        errmsg.append( "Login failed" )
+        logger.error( "Login failed" )
         return False
 
     if delay : 
         # NOTE : this message will be reported along subsequent errors
-        errmsg.append( "sleping %s secs until session gets active" % delay )
+        logger.error( "sleping %s secs until session gets active" % delay )
         time.sleep( delay )
 
     # NOTE : As we are using external updaters, we need to use loginout instead of logout to end session
@@ -150,16 +136,16 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
         command.wait()
         if cmdline.startswith('!') :
           if command.returncode == 0 :
-            errmsg.append( "outdate at %s" % cmdline )
+            logger.error( "outdate at %s" % cmdline )
             loginout ( url , uuid , "WARNING" )
             break
         else :
           if command.returncode != 0 :
             if avail_pkgs_retcode == command.returncode :
-                errmsg.append( "outdate at %s" % cmdline )
+                logger.error( "outdate at %s" % cmdline )
                 loginout ( url , uuid , "WARNING" )
             else :
-                errmsg.append( "failed at %s" % cmdline )
+                logger.error( "failed at %s" % cmdline )
                 loginout ( url , uuid , True )
             break
     else :
