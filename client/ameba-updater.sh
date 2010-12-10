@@ -51,7 +51,7 @@ case $action in
 
   register)
     if [ -n "${requestuuid}" ] ; then
-      if [ $# -eq 2 -a $2 != "__REQUEST__" ] ; then
+      if [ $# -eq 2 -a "$2" != "__REQUEST__" ] ; then
         echo "ERROR : Unallowed request for UUID when a value is supplied on command line"
         fi
       set -- $1 __REQUEST__
@@ -64,10 +64,11 @@ case $action in
     uuid=$2
     distroname=`echo $distroname | tr ' ' '_'`
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
-    response=`wget -q -O - "${url}/register?${postdata}"`
+    wget -q -O /tmp/aupd.response.$$ "${url}/register?${postdata}"
     if [ ${uuid} = "__REQUEST__" ] ; then
-      uuid=`echo $response | sed -n -e 's/^UUID //p'`
-      response=`echo $response | grep -v '^UUID'`
+      uuid=`sed -n -e 's/^UUID //p' /tmp/aupd.response.$$`
+      response=`grep -v '^UUID' /tmp/aupd.response.$$`
+      rm -f /tmp/aupd.response.$$
       fi
     if [ "${response}" = "OK" ] ; then
       uci set aupd.main=global
