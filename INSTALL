@@ -10,7 +10,7 @@ Create the nagios directory, with permissions for apache user, and copy amebaC3_
 Add the directory to nagios configuration with a cfg_dir directive
 Copy ameba_freshness_exceeded.sh to plugins directory ($USER1)
 
-Set proper authentication to access nagios, and required users to database
+Set proper authentication to access nagios, and add required nagios users to database
 
 <Directory /usr/lib/nagios/cgi-bin/>
    AuthType Basic

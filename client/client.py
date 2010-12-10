@@ -73,6 +73,7 @@ def login ( url , uuid ) :
             sessid = firstline[1]
             delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
         else :
+            # NOTE : login warnings could appear mixed with errors on combined operations
             if firstline :
                 errmsg.append( firstline )
                 errmsg.append( res.readlines() )
@@ -123,6 +124,7 @@ import time
 
 def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
 
+    # NOTE : This initial login serves just to check server availability
     sessid , delay = login( url , uuid )
 
     if not sessid : 

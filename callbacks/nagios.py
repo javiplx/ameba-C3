@@ -18,6 +18,7 @@ import os
 
 restart_allowed = True
 
+# Take values also from configuration file
 cfg_dir = "/etc/nagios/amebaC3"
 commandfile = "/var/spool/nagios/cmd/nagios.cmd"
 
@@ -33,6 +34,7 @@ define service{
         use                             ameba-service
         host_name                       %(hostname)s
         service_description             ameba updater
+;       servicegroups                   servicegroup_names
         }
 """
 

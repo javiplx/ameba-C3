@@ -46,6 +46,7 @@ def handler ( req ) :
 def authenhandler ( req ) :
 
     if req.headers_in.has_key( "Authorization" ) :
+        # If authorization is sent either req.user is set or an error response is produced
 
         try :
             type , uuid = req.headers_in["Authorization"].split(" ",1)
@@ -70,11 +71,13 @@ def authenhandler ( req ) :
                 req.user = "guest"
             db.close()
             return apache.OK
+
         elif type == "UUID" :
             if uuid.find(" ") != -1 :
                 req.log_error( "authenhandler : Malformed Authorization UUID '%s'" % uuid )
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
+
             req.user = uuid
             db = database.get( database.dbtype )
             node = db.get_node( uuid )
@@ -84,6 +87,7 @@ def authenhandler ( req ) :
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
             req.log_error( "authenhandler : user '%s' from UUID Authentication" % uuid , apache.APLOG_INFO )
+
         else :
             req.log_error( "authenhandler : Unknown Authorization type '%s'" % type )
             req.status = apache.HTTP_UNAUTHORIZED
@@ -140,6 +144,7 @@ def authenhandler ( req ) :
 # NOTE : Untested !!!
 def authzhandler ( req ) :
 
+    # FIXME : use a serialezed node on apache notes instead of reopening the database
     db = database.get( database.dbtype )
     node = db.get_node( req.user )
     db.close()

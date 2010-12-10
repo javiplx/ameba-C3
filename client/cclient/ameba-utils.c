@@ -9,7 +9,13 @@
 #define AMEBA_UPDATER_MAIN_SECTION "global"
 
 
-// TODO : List alternatives for glib .ini library
+/* If glib2 is not available for parsing configuration, there
+   are some alternatives.
+     - http://code.google.com/p/minini (preferred, allows writing)
+     - http://code.google.com/p/inih
+     - http://ndevilla.free.fr/iniparser
+     - http://www.compuphase.com/minini.htm
+*/
 
 GKeyFile *allocate_configuration( void ) {
     GKeyFile *config = g_key_file_new();
