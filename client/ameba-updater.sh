@@ -12,6 +12,8 @@
 # General Public License for more details.
 
 
+version="0.9.1"
+
 distroname=`uci get webif.general.firmware_name`
 random_wait=""
 
@@ -64,7 +66,7 @@ case $action in
     uuid=$2
     distroname=`echo $distroname | tr ' ' '_'`
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
-    wget -q -O /tmp/aupd.response.$$ "${url}/register?${postdata}"
+    wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}"
     if [ ${uuid} = "__REQUEST__" ] ; then
       uuid=`sed -n -e 's/^UUID //p' /tmp/aupd.response.$$`
       response=`grep -v '^UUID' /tmp/aupd.response.$$`
@@ -85,7 +87,7 @@ case $action in
       fi
     url=`uci get aupd.main.url`
     uuid=`uci get aupd.main.uuid`
-    response=`wget -q --header "Authorization: UUID ${uuid}" -O - "${url}/login"`
+    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login"`
     set -- `echo $response | head -1`
     if [ $# -eq 2 -a "$1" = "ID" ] ; then
       sessid=$2
@@ -100,12 +102,12 @@ case $action in
     status=$1
     url=`uci get aupd.main.url`
     uuid=`uci get aupd.main.uuid`
-    response=`wget -q --header "Authorization: UUID ${uuid}" -O - "${url}/login"`
+    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login"`
     set -- `echo $response | head -1`
     if [ $# -eq 2 -a "$1" = "ID" ] ; then
       sessid=$2
       fi
-    response=`wget -q --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" -O - "${url}/logoff"`
+    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" "${url}/logoff"`
     ;;
 
   pull)                                                                                                                                                     
@@ -122,12 +124,12 @@ case $action in
       fi                                                                                                                                                    
     url=`uci get aupd.main.url`                                                                                                                             
     uuid=`uci get aupd.main.uuid`                                                                                                                           
-    response=`wget -q --header "Authorization: UUID ${uuid}" -O - "${url}/login"`                                                                           
+    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login"`                                                                           
     set -- `echo $response | head -1`                                                                                                                       
     if [ $# -eq 2 -a "$1" = "ID" ] ; then                                                                                                                   
       sessid=$2                                                                                                                                             
       fi                                                                                                                                                    
-    response=`wget -q --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" -O - "${url}/logoff"`                                          
+    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" "${url}/logoff"`                                          
     ;;                                                                                                                                                      
 
   *)
