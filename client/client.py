@@ -34,7 +34,14 @@ def register ( url , data ) :
         firstline = res.readline().splitlines()[0]
         if firstline == "OK" :
             ret = True
-            map( logger.warning , res.readlines() )
+            secondline = res.readline().splitlines()[0]
+            if secondline :
+                response = secondline.split()
+                if response[0] == "UUID" and len(response) == 2 :
+                    ret = response[1]
+                else :
+                    logger.error( secondline )
+                map( logger.warning , res.readlines() )
         else :
             logger.error( firstline )
             map( logger.error , res.readlines() )

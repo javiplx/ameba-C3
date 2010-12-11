@@ -26,7 +26,7 @@ config = ConfigParser.RawConfigParser()
 config.read( configfile )
 
 usage = """
-\t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
+\t%prog [--autogenerate|--requestuuid] [--distro distroname] register [url [uuid] ]
 \t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] [--logfile filename] pulldaemon
 \t%prog [--random-wait seconds] [--check-only|--force-upgrade] pull
 \t%prog login
@@ -127,6 +127,10 @@ def register ( config , options , args ) :
             _uuid = config.get( 'global' , 'uuid' )
             uuid_location = "configuration file"
 
+    if options.autouuid and options.requestuuid :
+        logger.error( "Autogeneration and request for UUID cannot be mixed" )
+        return False
+
     if options.autouuid :
         if _uuid :
             logger.error( "Autogeneration requested with UUID given in %s" % uuid_location )
@@ -135,6 +139,12 @@ def register ( config , options , args ) :
             logger.error( "Supply explicit UUID, no python module available for autogeneration" )
             return False
         _uuid = uuid.uuid4()
+
+    if options.requestuuid :
+        if _uuid :
+            logger.error( "Attempting to request UUID from server while giving one in %s" % uuid_location )
+            return False
+        _uuid = "__REQUEST__"
 
     if not _uuid :
         errors.append( "UUID" )
@@ -160,7 +170,8 @@ def register ( config , options , args ) :
         return False
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
-    if amebaC3_client.client.register( _url , data ) :
+    ret = amebaC3_client.client.register( _url , data )
+    if ret :
         # FIXME : If we supply url & uuid on command line matching those in config file, we will rewrite it
         #         Giving only url will not overwrite as store flag is set back to False
         # A temporary solution is to check before writing that new info is being added
@@ -168,7 +179,10 @@ def register ( config , options , args ) :
             if not config.has_section( 'global' ) :
                 config.add_section( 'global' )
             config.set( 'global' , 'url' , _url )
-            config.set( 'global' , 'uuid' , _uuid )
+            if options.requestuuid :
+                config.set( 'global' , 'uuid' , ret )
+            else :
+                config.set( 'global' , 'uuid' , _uuid )
             store_config( config )
 
     return True
@@ -389,9 +403,15 @@ import optparse
 
 parser = optparse.OptionParser(usage=usage, version=version)
 parser.set_defaults( autouuid=False )
+parser.set_defaults( requestuuid=False )
+parser.set_defaults( check_only=True )
 
 parser.add_option("--autogenerate",
-        action="store_true", dest="autouuid", default=False,
+        action="store_true", dest="autouuid",
+        help="Automatically generate a random UUID")
+
+parser.add_option("--requestuuid",
+        action="store_true", dest="requestuuid",
         help="Automatically generate a random UUID")
 
 parser.add_option("--distro", dest="distro",
@@ -400,7 +420,7 @@ parser.add_option("--distro", dest="distro",
 parser.add_option("--sessid", dest="sessid",
         help="Set session ID")
 
-parser.add_option("--check-only", default=True,
+parser.add_option("--check-only",
         action="store_true", dest="check_only",
         help="Perform only a check for updates")
 
