@@ -11,7 +11,7 @@
 # General Public License for more details.
 
 
-__version__ = 1.0
+__version__ = 1.1
 
 
 import urllib , urllib2
@@ -26,7 +26,9 @@ def register ( url , data ) :
     ret = False
 
     try :
-        res = urllib2.urlopen( "%s/register" % url , urllib.urlencode( data ) )
+        req = urllib2.Request( "%s/register" % url , data=urllib.urlencode( data ) )
+        req.add_header( "User-Agent" , "AmebaC3-Agent/%s" % __version__ )
+        res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
         logger.error( res.msg )
         map( logger.error , res.readlines() )
@@ -34,7 +36,7 @@ def register ( url , data ) :
         firstline = res.readline().splitlines()[0]
         if firstline == "OK" :
             ret = True
-            secondline = res.readline().splitlines()[0]
+            secondline = res.readline()
             if secondline :
                 response = secondline.split()
                 if response[0] == "UUID" and len(response) == 2 :
@@ -52,6 +54,7 @@ def register ( url , data ) :
 def login ( url , uuid ) :
 
     req = urllib2.Request( "%s/login" % url )
+    req.add_header( "User-Agent" , "AmebaC3-Agent/%s" % __version__ )
     req.add_header( "Authorization" , "UUID %s" % uuid )
 
     sessid , delay = None , 0
@@ -78,6 +81,7 @@ def login ( url , uuid ) :
 def logout ( url , sessid , failed=False ) :
 
     req = urllib2.Request( "%s/logoff" % url )
+    req.add_header( "User-Agent" , "AmebaC3-Agent/%s" % __version__ )
     req.add_header( "Cookie" , "pysid=%s" % sessid )
     if failed is True :
         req.add_header( "X-AmebaStatus" , "FAIL" )
