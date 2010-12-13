@@ -1,15 +1,20 @@
 
-Deshacemos el bicho
+Quick Start
+-----------
 
-ejecutamos setup.py install
+* Uncompress and install runnint setup.py
 
-Metemos el cron :
-* add proper pull section
-* cat crontab.line >> /etc/crontab
+* Register system
+  aupd --autogenerate register http://r26936.ovh.net/amebaC3
 
-En plan demonio ( falta initscript ) :
-* add proper pulldaemon section
-* add proper pull section (check-only and random-wait might not be honoured, depending on pulldaemon)
+* Configure (/etc/aupd.conf)
+  Copy proper pull section (rename to pull) from sample configuration
+    at /usr/share/doc/amebaC3_client/samples
 
-* start daemon
+* Setup periodic report
+  - crontab based
+    cat crontab.line >> /etc/crontab
+  - daemon
+    Add pulldaemon section to /etc/aupd.conf defining check-interval
+    Install ameba-updater initscript
 

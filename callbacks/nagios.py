@@ -18,6 +18,7 @@ import os
 
 restart_allowed = True
 
+# Take values also from configuration file
 cfg_dir = "/etc/nagios/amebaC3"
 commandfile = "/var/spool/nagios/cmd/nagios.cmd"
 
@@ -33,6 +34,7 @@ define service{
         use                             ameba-service
         host_name                       %(hostname)s
         service_description             ameba updater
+;       servicegroups                   servicegroup_names
         }
 """
 
@@ -51,6 +53,13 @@ def send_command ( command , hostname=None , msg=None ) :
         fd.write( "[%lu] %s\n" % ( time.time() , command ) )
     fd.close()
 
+# FIXME : Permissions
+def write_conf ( filename , template , values ) :
+    name = os.path.join( cfg_dir , "%s.cfg" % filename )
+    fd = open( name , 'w' )
+    fd.write( template % values )
+    fd.close()
+
 
 class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
 
@@ -59,18 +68,10 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
         _dbvalues = { 'uuid':uuid }
         _dbvalues.update( dbvalues )
 
-        fname = os.path.join( cfg_dir , "%s.cfg" % uuid )
-        # FIXME : Exception if exists? Is truncate is enough?
-        # FIXME : Permissions
-        fd = open( fname , 'w' )
-        fd.write( node_template % _dbvalues )
-        fd.close()
+        # FIXME : Exception if exists?
+        write_conf( uuid , node_template , _dbvalues )
 
-        fname = os.path.join( cfg_dir , "%s.cfg" % _dbvalues['distro'].replace("/"," ") )
-        if not os.path.exists( fname ) :
-            fd = open( fname , 'w' )
-            fd.write( group_template % _dbvalues )
-            fd.close()
+        write_conf( _dbvalues['distro'].replace("/"," ") , group_template , _dbvalues )
 
         if restart_allowed :
             send_command( "RESTART_PROGRAM" )

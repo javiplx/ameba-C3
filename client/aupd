@@ -26,8 +26,8 @@ config = ConfigParser.RawConfigParser()
 config.read( configfile )
 
 usage = """
-\t%prog [--autogenerate] [--distro distroname] register [url [uuid] ]
-\t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] pulldaemon
+\t%prog [--autogenerate|--requestuuid] [--distro distroname] register [url [uuid] ]
+\t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] [--logfile filename] pulldaemon
 \t%prog [--random-wait seconds] [--check-only|--force-upgrade] pull
 \t%prog login
 \t%prog --sessid id logout
@@ -114,17 +114,8 @@ def register ( config , options , args ) :
 
     if args :
         _uuid = args.pop(0)
+        uuid_location = "command line"
         options.store = True
-
-    if _uuid and options.autouuid :
-        logger.error( "You should not give explicit UUID when requesting autogeneration" )
-        return False
-
-    if options.autouuid :
-        if not uuid :
-            logger.error( "Supply explicit UUID, no python module available for autogeneration" )
-            return False
-        _uuid = uuid.uuid4()
 
     if config.has_option( 'global' , 'uuid' ) :
         if _uuid :
@@ -134,6 +125,26 @@ def register ( config , options , args ) :
             logger.warning( "UUID already given on configuration file" )
         else :
             _uuid = config.get( 'global' , 'uuid' )
+            uuid_location = "configuration file"
+
+    if options.autouuid and options.requestuuid :
+        logger.error( "Autogeneration and request for UUID cannot be mixed" )
+        return False
+
+    if options.autouuid :
+        if _uuid :
+            logger.error( "Autogeneration requested with UUID given in %s" % uuid_location )
+            return False
+        if not uuid :
+            logger.error( "Supply explicit UUID, no python module available for autogeneration" )
+            return False
+        _uuid = uuid.uuid4()
+
+    if options.requestuuid :
+        if _uuid :
+            logger.error( "Attempting to request UUID from server while giving one in %s" % uuid_location )
+            return False
+        _uuid = "__REQUEST__"
 
     if not _uuid :
         errors.append( "UUID" )
@@ -159,10 +170,8 @@ def register ( config , options , args ) :
         return False
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
-    if amebaC3_client.client.register( _url , data ) :
-        if amebaC3_client.client.has_errmsg() :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
+    ret = amebaC3_client.client.register( _url , data )
+    if ret :
         # FIXME : If we supply url & uuid on command line matching those in config file, we will rewrite it
         #         Giving only url will not overwrite as store flag is set back to False
         # A temporary solution is to check before writing that new info is being added
@@ -170,11 +179,11 @@ def register ( config , options , args ) :
             if not config.has_section( 'global' ) :
                 config.add_section( 'global' )
             config.set( 'global' , 'url' , _url )
-            config.set( 'global' , 'uuid' , _uuid )
+            if options.requestuuid :
+                config.set( 'global' , 'uuid' , ret )
+            else :
+                config.set( 'global' , 'uuid' , _uuid )
             store_config( config )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
 
     return True
 
@@ -219,12 +228,6 @@ def login ( config , options , args ) :
         print "session id : %s" % sessid
         if delay :
             print "activated in %s seconds" % delay
-        if amebaC3_client.client.has_errmsg() :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
 
     return True
 
@@ -248,12 +251,6 @@ def logout ( config , options , args ) :
 
     if amebaC3_client.client.logout ( _url , options.sessid ) :
         logger.info( "Session closed : %s" % options.sessid )
-        if amebaC3_client.client.has_errmsg() :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
 
     return True
 
@@ -271,13 +268,7 @@ def loginout ( config , options , args ) :
     _url = config.get( 'global' , 'url' )
     _uuid = config.get( 'global' , 'uuid' )
 
-    if amebaC3_client.client.loginout ( _url , _uuid ) :
-        if amebaC3_client.client.has_errmsg() :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.warning( msg )
-    else :
-        for msg in amebaC3_client.client.get_all_errmsg() :
-            logger.error( msg )
+    amebaC3_client.client.loginout ( _url , _uuid )
 
     return True
 
@@ -314,6 +305,9 @@ def pull ( config , options , args=() ) :
         if config.has_option( 'pull' , 'check-only' ) :
             options.check_only = config.getboolean( 'pull' , 'check-only' )
 
+    if options.silent :
+        logger.setLevel(logging.CRITICAL)
+
     outdated_retcode = 0
 
     cmds_parname = 'update_cmds'
@@ -340,17 +334,7 @@ def pull ( config , options , args=() ) :
     _url = config.get( 'global' , 'url' )
     _uuid = config.get( 'global' , 'uuid' )
 
-    ret = amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , outdated_retcode )
-    if not options.silent :
-        if ret :
-            if amebaC3_client.client.has_errmsg() :
-                for msg in amebaC3_client.client.get_all_errmsg() :
-                    logger.warning( msg )
-        else :
-            for msg in amebaC3_client.client.get_all_errmsg() :
-                logger.error( msg )
-
-    return ret
+    return amebaC3_client.client.pull ( _url , _uuid , _cmds.split(',') , outdated_retcode )
 
 
 import threading
@@ -398,8 +382,7 @@ def pulldaemon ( config , options , args ) :
             config.set( 'pulldaemon' , 'check-only' , options.check_only )
         store_config( config )
 
-    # FIXME : Turn this into configurable value, or use sensible filename at least
-    amebaC3_client.daemon.REDIRECT_TO = "/tmp/ameba.log"
+    amebaC3_client.daemon.REDIRECT_TO = options.logfile
     open( amebaC3_client.daemon.REDIRECT_TO , "a" ).close()
     retcode = amebaC3_client.daemon.createDaemon()
 
@@ -420,9 +403,15 @@ import optparse
 
 parser = optparse.OptionParser(usage=usage, version=version)
 parser.set_defaults( autouuid=False )
+parser.set_defaults( requestuuid=False )
+parser.set_defaults( check_only=True )
 
 parser.add_option("--autogenerate",
-        action="store_true", dest="autouuid", default=False,
+        action="store_true", dest="autouuid",
+        help="Automatically generate a random UUID")
+
+parser.add_option("--requestuuid",
+        action="store_true", dest="requestuuid",
         help="Automatically generate a random UUID")
 
 parser.add_option("--distro", dest="distro",
@@ -431,7 +420,7 @@ parser.add_option("--distro", dest="distro",
 parser.add_option("--sessid", dest="sessid",
         help="Set session ID")
 
-parser.add_option("--check-only", default=True,
+parser.add_option("--check-only",
         action="store_true", dest="check_only",
         help="Perform only a check for updates")
 
@@ -446,6 +435,9 @@ parser.add_option("--check-interval",
 parser.add_option("--random-wait",
 	dest="wait", type="float",
         help="Set maximum random waiting time")
+
+parser.add_option("--logfile", dest="logfile", default="/var/log/ameba_updater.log",
+        help="Specify logfile for daemon")
 
 parser.add_option("--store",
         action="store_true", dest="store", default=False,

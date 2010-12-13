@@ -46,6 +46,7 @@ def handler ( req ) :
 def authenhandler ( req ) :
 
     if req.headers_in.has_key( "Authorization" ) :
+        # If authorization is sent either req.user is set or an error response is produced
 
         try :
             type , uuid = req.headers_in["Authorization"].split(" ",1)
@@ -70,11 +71,14 @@ def authenhandler ( req ) :
                 req.user = "guest"
             db.close()
             return apache.OK
+
         elif type == "UUID" :
             if uuid.find(" ") != -1 :
                 req.log_error( "authenhandler : Malformed Authorization UUID '%s'" % uuid )
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
+
+            req.user = uuid
             db = database.get( database.dbtype )
             node = db.get_node( uuid )
             db.close()
@@ -83,7 +87,7 @@ def authenhandler ( req ) :
                 req.status = apache.HTTP_UNAUTHORIZED
                 return apache.DONE
             req.log_error( "authenhandler : user '%s' from UUID Authentication" % uuid , apache.APLOG_INFO )
-            req.user = uuid
+
         else :
             req.log_error( "authenhandler : Unknown Authorization type '%s'" % type )
             req.status = apache.HTTP_UNAUTHORIZED
@@ -91,6 +95,7 @@ def authenhandler ( req ) :
 
 
     sess = Session.Session( req )
+    req.subprocess_env['sessid'] = sess.id()
     if sess.is_new() :
         if req.user :
             # NOTE : proper expiration time is not set on the cookie
@@ -120,29 +125,26 @@ def authenhandler ( req ) :
             sess.save()
             nagios.nodealive( sess )
         else :
+            req.user = sess['UUID']
             if req.path_info == "/logoff" :
                 callbacks.run_stage( "update" , ( sess , req.headers_in.get( "X-AmebaStatus" , "OK" ) ) )
-                req.log_error( "authenhandler : user '%s' ended session %s" % ( sess['UUID'] , sess.id() ) , apache.APLOG_INFO )
-                req.user = sess['UUID']
-                req.subprocess_env['sessid'] = sess.id()
                 sess.invalidate()
-                # NOTE : We will run through the standard handler response
-                return apache.OK
-            req.log_error( "authenhandler : user '%s' from session" % sess['UUID'] , apache.APLOG_INFO )
-            if allow_session_refresh :
-                sess.save()
-            req.user = sess['UUID']
+                req.log_error( "authenhandler : user '%s' ended session %s" % ( req.user , req.subprocess_env['sessid'] ) , apache.APLOG_INFO )
+            else :
+                req.log_error( "authenhandler : user '%s' from session" % req.user , apache.APLOG_INFO )
+                if allow_session_refresh :
+                    sess.save()
 
     # NOTE : we should search and remove any other existing session for this uuid
 
     # NOTE : Stopping here with DONE will not work, so we require the content handler phase for login requests
-    req.subprocess_env['sessid'] = sess.id()
 
     return apache.OK
 
 # NOTE : Untested !!!
 def authzhandler ( req ) :
 
+    # FIXME : use a serialezed node on apache notes instead of reopening the database
     db = database.get( database.dbtype )
     node = db.get_node( req.user )
     db.close()

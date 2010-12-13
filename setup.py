@@ -16,7 +16,7 @@ from distutils.core import setup
 
 setup(
 	name = "amebaC3" ,
-	version = "1.0" ,
+	version = "1.1" ,
 	description = "AmebaC3 server" ,
 	author = "Javier Palacios" ,
 	author_email = "javiplx@gmail.com" ,

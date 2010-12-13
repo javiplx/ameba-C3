@@ -11,51 +11,50 @@
 # General Public License for more details.
 
 
-__version__ = 1.0
+__version__ = 1.1
 
 
 import urllib , urllib2
 
 
-errmsg = []
-
-def has_errmsg () :
-    if errmsg :
-        return True
-    return False
-
-def get_errmsg () :
-    return errmsg.pop(0)
-
-def get_all_errmsg () :
-    msgs = []
-    while has_errmsg() :
-        msgs.append( get_errmsg() )
-    return msgs
-
+import logging
+logger = logging.getLogger()
 
 
 def register ( url , data ) :
 
-    try :
-        res = urllib2.urlopen( "%s/register" % url , urllib.urlencode( data ) )
-    except urllib2.HTTPError , res :
-        errmsg.append( res.msg )
-        errmsg.extend( res.readlines() )
-    else :
-        firstline = res.readline()
-        if firstline == "OK" :
-            return True
-        if firstline :
-            errmsg.append( firstline )
-            errmsg.extend( res.readlines() )
+    ret = False
 
-    return False
+    try :
+        req = urllib2.Request( "%s/register" % url , data=urllib.urlencode( data ) )
+        req.add_header( "User-Agent" , "AmebaC3-Agent/%s" % __version__ )
+        res = urllib2.urlopen( req )
+    except urllib2.HTTPError , res :
+        logger.error( res.msg )
+        map( logger.error , res.readlines() )
+    else :
+        firstline = res.readline().splitlines()[0]
+        if firstline == "OK" :
+            ret = True
+            secondline = res.readline()
+            if secondline :
+                response = secondline.split()
+                if response[0] == "UUID" and len(response) == 2 :
+                    ret = response[1]
+                else :
+                    logger.error( secondline )
+                map( logger.warning , res.readlines() )
+        else :
+            logger.error( firstline )
+            map( logger.error , res.readlines() )
+
+    return ret
 
 
 def login ( url , uuid ) :
 
     req = urllib2.Request( "%s/login" % url )
+    req.add_header( "User-Agent" , "AmebaC3-Agent/%s" % __version__ )
     req.add_header( "Authorization" , "UUID %s" % uuid )
 
     sessid , delay = None , 0
@@ -63,17 +62,18 @@ def login ( url , uuid ) :
     try :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
-        errmsg.append( res.msg )
-        errmsg.extend( res.readlines() )
+        logger.error( res.msg )
+        map( logger.error , res.readlines() )
     else :
-        firstline = res.readline().split()
+        firstline = res.readline().splitlines()[0].split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
             sessid = firstline[1]
             delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
         else :
+            # NOTE : login warnings could appear mixed with errors on combined operations
             if firstline :
-                errmsg.append( firstline )
-                errmsg.append( res.readlines() )
+                logger.error( firstline )
+                map( logger.error , res.readlines() )
 
     return sessid , delay
 
@@ -81,6 +81,7 @@ def login ( url , uuid ) :
 def logout ( url , sessid , failed=False ) :
 
     req = urllib2.Request( "%s/logoff" % url )
+    req.add_header( "User-Agent" , "AmebaC3-Agent/%s" % __version__ )
     req.add_header( "Cookie" , "pysid=%s" % sessid )
     if failed is True :
         req.add_header( "X-AmebaStatus" , "FAIL" )
@@ -90,16 +91,16 @@ def logout ( url , sessid , failed=False ) :
     try :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
-        errmsg.append( res.msg )
-        errmsg.extend( res.readlines() )
+        logger.error( res.msg )
+        map( logger.error , res.readlines() )
     else :
-        firstline = res.readline().split()
+        firstline = res.readline().splitlines()[0].split()
         if firstline and firstline[0] == "ID" and len(firstline) == 2 :
             return True
-        errmsg.append( "Logout failed" )
+        logger.error( "Logout failed" )
         if firstline :
-            errmsg.append( firstline )
-            errmsg.extend( res.readlines() )
+            logger.error( firstline )
+            map( logger.error , res.readlines() )
 
     return False
 
@@ -110,7 +111,7 @@ def loginout ( url , uuid , failed=False ) :
     # NOTE : login warnings will appear mixed with errors from later stages
 
     if not sessid : 
-        errmsg.append( "Login failed" )
+        logger.error( "Login failed" )
         return False
 
     return logout ( url , sessid , failed )
@@ -121,15 +122,16 @@ import time
 
 def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
 
+    # NOTE : This initial login serves just to check server availability
     sessid , delay = login( url , uuid )
 
     if not sessid : 
-        errmsg.append( "Login failed" )
+        logger.error( "Login failed" )
         return False
 
     if delay : 
         # NOTE : this message will be reported along subsequent errors
-        errmsg.append( "sleping %s secs until session gets active" % delay )
+        logger.warning( "sleping %s secs until session gets active" % delay )
         time.sleep( delay )
 
     # NOTE : As we are using external updaters, we need to use loginout instead of logout to end session
@@ -146,16 +148,16 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
         command.wait()
         if cmdline.startswith('!') :
           if command.returncode == 0 :
-            errmsg.append( "outdate at %s" % cmdline )
+            logger.error( "outdate at %s" % cmdline )
             loginout ( url , uuid , "WARNING" )
             break
         else :
           if command.returncode != 0 :
             if avail_pkgs_retcode == command.returncode :
-                errmsg.append( "outdate at %s" % cmdline )
+                logger.error( "outdate at %s" % cmdline )
                 loginout ( url , uuid , "WARNING" )
             else :
-                errmsg.append( "failed at %s" % cmdline )
+                logger.error( "failed at %s" % cmdline )
                 loginout ( url , uuid , True )
             break
     else :
