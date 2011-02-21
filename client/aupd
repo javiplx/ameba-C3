@@ -29,9 +29,6 @@ usage = """
 \t%prog [--autogenerate|--requestuuid] [--distro distroname] register [url [uuid] ]
 \t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] [--logfile filename] pulldaemon
 \t%prog [--random-wait seconds] [--check-only|--force-upgrade] pull
-\t%prog login
-\t%prog --sessid id logout
-\t%prog loginout
 """
 
 version = "%%prog %s" % __version__
@@ -210,69 +207,6 @@ def check_configuration ( check_uuid=True ) :
     return True
 
 
-def login ( config , options , args ) :
-
-    if args :
-        logger.error( "Too many arguments" )
-        parser.print_help()
-        return False
-
-    if not check_configuration() :
-        return False
-
-    _url = config.get( 'global' , 'url' )
-    _uuid = config.get( 'global' , 'uuid' )
-
-    sessid , delay = amebaC3_client.client.login ( _url , _uuid )
-    if sessid :
-        print "session id : %s" % sessid
-        if delay :
-            print "activated in %s seconds" % delay
-
-    return True
-
-
-def logout ( config , options , args ) :
-
-    if args :
-        logger.error( "Too many arguments" )
-        parser.print_help()
-        return False
-
-    if not options.sessid :
-        logger.error( "Missing session identifier" )
-        parser.print_help()
-        return False
-
-    if not check_configuration( False ) :
-        return False
-
-    _url = config.get( 'global' , 'url' )
-
-    if amebaC3_client.client.logout ( _url , options.sessid ) :
-        logger.info( "Session closed : %s" % options.sessid )
-
-    return True
-
-
-def loginout ( config , options , args ) :
-
-    if args :
-        logger.error( "Too many arguments" )
-        parser.print_help()
-        return False
-
-    if not check_configuration() :
-        return False
-
-    _url = config.get( 'global' , 'url' )
-    _uuid = config.get( 'global' , 'uuid' )
-
-    amebaC3_client.client.loginout ( _url , _uuid )
-
-    return True
-
-
 import fcntl
 
 def get_lock ( filename="/tmp/aupd.lock" ) :
@@ -393,9 +327,6 @@ def pulldaemon ( config , options , args ) :
 
 command = { 'register':register ,
             'pull':pull ,
-            'logout':logout ,
-            'login':login ,
-            'loginout':loginout ,
             'pulldaemon':pulldaemon ,
             }
 
@@ -416,9 +347,6 @@ parser.add_option("--requestuuid",
 
 parser.add_option("--distro", dest="distro",
         help="Set primary channel")
-
-parser.add_option("--sessid", dest="sessid",
-        help="Set session ID")
 
 parser.add_option("--check-only",
         action="store_true", dest="check_only",

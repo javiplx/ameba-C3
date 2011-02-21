@@ -4,7 +4,7 @@ aupd
 Modes : register , pull , pulldaemon
 
 * register
-Register teh system in the amebaC3 server, supplying all the required
+Register the system in the amebaC3 server, supplying all the required
 information (hostname, distro).
 The url for amebaC3 server and the uuid are mandatory, and can be given on
 command line or taken from an already existing configuration file. The distro
