@@ -32,7 +32,7 @@ EOF
 while getopts "rd:w:" opt ; do
 
   case $opt in
-    d) test "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
+    d) test -n "${distroname}" -a "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
        distroname=${OPTARG}
        ;;
     w) random_wait=${OPTARG}
