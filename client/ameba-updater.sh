@@ -22,8 +22,8 @@ progname=$0
 print_usage () {
     prog=$1
 cat <<EOF
-${prog} [-r] [--d distroname] register url [uuid]
-${prog} [-w seconds] [--check-only|--force-upgrade] pull
+${prog} [-r] [-d distroname] register url [uuid]
+${prog} [-w seconds] [-c|-f] pull
 ${prog} login
 ${prog} loginout
 EOF
@@ -117,7 +117,7 @@ case $action in
       exit 1                                                                                                                                                
       fi                                                                                                                                                    
     test -n "${random_wait}" && sleep ${random_wait}
-    ipkg -V 0 update && ipkg -test upgrade | grep -q '^Upgrading '                                                                                          
+    opkg -V 0 update && opkg -test upgrade | grep -q '^Upgrading '                                                                                          
     if [ $? -eq 1 ] ; then                                                                                                                                  
       status="OK"                                                                                                                                           
     else                                                                                                                                                    
