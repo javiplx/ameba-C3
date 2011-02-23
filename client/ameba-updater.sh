@@ -73,10 +73,11 @@ case $action in
       rm -f /tmp/aupd.response.$$
       fi
     if [ "${response}" = "OK" ] ; then
+      touch /etc/config/aupd
       uci set aupd.main=global
       uci set aupd.main.url=${url}
       uci set aupd.main.uuid=${uuid}
-      uci commit
+      uci commit aupd
       fi
     ;;
 
