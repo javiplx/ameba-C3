@@ -16,6 +16,7 @@ version="0.9.1"
 
 distroname=`uci get webif.general.firmware_name`
 random_wait=""
+pull_mode="check"
 
 progname=$0
 
@@ -38,6 +39,10 @@ while getopts "rd:w:" opt ; do
     w) random_wait=${OPTARG}
        ;;
     r) requestuuid="Y"
+       ;;
+    c) pull_mode="check"
+       ;;
+    f) pull_mode="upgrade"
        ;;
     *) print_usage
        exit 1
@@ -116,12 +121,17 @@ case $action in
       echo "ERROR : pull bad usage"                                                                                                                         
       exit 1                                                                                                                                                
       fi                                                                                                                                                    
-    test -n "${random_wait}" && sleep ${random_wait}
-    opkg -V 0 update && opkg -test upgrade | grep -q '^Upgrading '                                                                                          
-    if [ $? -eq 1 ] ; then                                                                                                                                  
-      status="OK"                                                                                                                                           
-    else                                                                                                                                                    
-      status="WARNING"                                                                                                                                      
+    if [ ${pull_mode} = "upgrade" ] ; then
+      echo "WARNING : upgrade mode not yet available"
+      status="CRITICAL"
+    else
+      test -n "${random_wait}" && sleep ${random_wait}
+      opkg -V 0 update && opkg -test upgrade | grep -q '^Upgrading '                                                                                          
+      if [ $? -eq 1 ] ; then                                                                                                                                  
+        status="OK"                                                                                                                                           
+      else                                                                                                                                                    
+        status="WARNING"                                                                                                                                      
+        fi                                                                                                                                                    
       fi                                                                                                                                                    
     url=`uci get aupd.main.url`                                                                                                                             
     uuid=`uci get aupd.main.uuid`                                                                                                                           
