@@ -25,9 +25,14 @@ commandfile = "/var/spool/nagios/cmd/nagios.cmd"
 node_template = """define host{
         use                     ameba-node
         host_name               %(hostname)s
-        alias                   %(uuid)s
+        alias                   %(hostname)s
         address                 %(hostaddress)s
         hostgroups              %(distro)s
+        }
+
+define hostextinfo{
+        host_name     %(hostname)s
+        notes         %(uuid)s
         }
 
 define service{
