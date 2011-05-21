@@ -126,7 +126,7 @@ case $action in
       status="CRITICAL"
     else
       test -n "${random_wait}" && sleep ${random_wait}
-      opkg -V 0 update && opkg -test upgrade | grep -q '^Upgrading '
+      opkg -V 0 update 2> /dev/null && opkg -test upgrade | grep -q '^Upgrading '
       if [ $? -eq 1 ] ; then
         status="OK"
       else
