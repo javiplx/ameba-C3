@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2010 Javier Palacios
+# Copyright (C) 2010, 2011 Javier Palacios
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License Version 2
@@ -12,7 +12,7 @@
 # General Public License for more details.
 
 
-version="0.9.1"
+version="0.9.2"
 
 distroname=OpenWrt_`cat /etc/openwrt_version`
 random_wait="300"
