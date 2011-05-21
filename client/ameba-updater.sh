@@ -14,8 +14,8 @@
 
 version="0.9.1"
 
-distroname=`uci get webif.general.firmware_name`
-random_wait=""
+distroname=OpenWrt_`cat /etc/openwrt_version`
+random_wait="300"
 pull_mode="check"
 
 progname=$0
