@@ -12,25 +12,28 @@
 # General Public License for more details.
 
 
-version="0.9.2"
+version="0.9.3"
 
 distroname=OpenWrt_`cat /etc/openwrt_version`
 random_wait="300"
 pull_mode="check"
+metrics=""
 
 progname=$0
 
 print_usage () {
     prog=$1
+    shift
+    test $# -gt 0 && echo "ERROR : $*"
 cat <<EOF
-${prog} [-r] [-d distroname] register url [uuid]
+${prog} [-r] [-d distroname] [-m metric1,metric2,...] register url [uuid]
 ${prog} [-w seconds] [-c|-f] pull
 ${prog} login
 ${prog} loginout
 EOF
 }
 
-while getopts "rd:w:" opt ; do
+while getopts "rd:w:m:" opt ; do
 
   case $opt in
     d) test -n "${distroname}" -a "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
@@ -42,9 +45,11 @@ while getopts "rd:w:" opt ; do
        ;;
     c) pull_mode="check"
        ;;
+    m) metrics=${OPTARG}
+       ;;
     f) pull_mode="upgrade"
        ;;
-    *) print_usage
+    *) print_usage ${progname}
        exit 1
        ;;
     esac
@@ -71,6 +76,7 @@ case $action in
     uuid=$2
     distroname=`echo $distroname | tr ' ' '_'`
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
+    test -n "${metrics}" && postdata="${postdata}&METRICS=${metrics}"
     wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}"
     if [ ${uuid} = "__REQUEST__" ] ; then
       uuid=`sed -n -e 's/^UUID //p' /tmp/aupd.response.$$`
@@ -144,7 +150,7 @@ case $action in
     ;;
 
   *)
-    print_usage ${progname}
+    print_usage ${progname} "Unknown operation"
     ;;
 
   esac
