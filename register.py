@@ -47,7 +47,7 @@ def handler ( req ) :
             import uuid
             args['UUID'] = "%s" % uuid.uuid4()
             error_msg.append( "UUID %s" % args['UUID'] )
-        dbvalues = db.add_node( args['UUID'] , args['DISTRO'] , args['HOSTNAME'] , req )
+        dbvalues = db.add_node( args , req )
         db.close()
         callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
     except ImportError , ex :

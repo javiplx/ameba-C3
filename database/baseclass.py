@@ -119,11 +119,13 @@ class Database :
         return None
 
 
-    def add_node ( self , uuid , distro , hostname , req=None ) :
+    def add_node ( self , args , req=None ) :
+        uuid = args['UUID']
 
         dbvalues = { 'type':"node" ,
-                     'distro':distro ,
-                     'hostname':hostname ,
+                     'distro':args['DISTRO'] ,
+                     'metrics':args['METRICS'] ,
+                     'hostname':args['HOSTNAME'] ,
                      'registration_date':time.mktime(time.gmtime())
                      }
 
@@ -134,6 +136,7 @@ class Database :
 
         field_names = ( "distro" ,
                         "channels" ,
+                        "metrics" ,
                         "hostname" ,
                         "hostaddress"
                         ) + self.field_names
