@@ -58,7 +58,8 @@ class StatsCollectorAddHost ( __baseclass.AbstractRegisterCallback ) :
             if host_list is None or hostname in host_list :
                 continue
             outlines =  []
-            unprocessed , insertline = True , None
+            unprocessed = True
+            insertline , last_host = 0 , 0
             cfg , lead = getConf( metric , 'r+' )
             line = cfg.readline()
             while line :
@@ -66,12 +67,19 @@ class StatsCollectorAddHost ( __baseclass.AbstractRegisterCallback ) :
                     insertline = len(outlines)
                 outlines.append( line )
                 # FIXME : this will produce lengthy files, some more intelligent reorganization is required
+                if line.startswith("H") :
+                  last_host = len(outlines)
                 if line.startswith(lead) and unprocessed :
                     outlines.append( "%s%s\n" % ( lead , hostname ) )
                     unprocessed = False
                 line = cfg.readline()
             # We must care about rare cases where this is the first host ??
             if unprocessed :
+              if last_host :
+                # FIXME : this could fail when conf ends with a host definition
+                outlines.insert( last_host , "%s%s\n\n" % ( lead , hostname ) )
+              else :
+                # FIXME : this way to insert point might (unlikely) not handle empty files
                 outlines.insert( insertline , "%s%s\n\n" % ( lead , hostname ) )
             cfg.seek(0)
             for line in outlines :
