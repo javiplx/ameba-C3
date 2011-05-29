@@ -7,7 +7,7 @@ mkdir -p ameba-wrt/CONTROL
 
 cat <<EOF > ameba-wrt/CONTROL/control
 Package: amebac3-shell-client
-Version: 0.9.2-1
+Version: 0.9.3-2
 Architecture: all
 Maintainer: Javier Palacios <javiplx@gmail.com>
 Description: AmebaC3 update shell agent
@@ -19,7 +19,7 @@ EOF
 mkdir -p ameba-wrt/bin
 cp ameba-updater.sh ameba-wrt/bin
 
-opkg-build -O ameba-wrt
+opkg-build -c ameba-wrt
 
 rm -rf ameba-wrt
 
