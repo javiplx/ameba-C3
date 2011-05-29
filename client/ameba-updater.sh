@@ -33,6 +33,30 @@ ${prog} loginout
 EOF
 }
 
+
+. /etc/functions.sh
+
+guess_metrics() {
+
+  config_load system
+  cfg=`config_foreach echo stats`
+
+  metrics=""
+  for metric in `uci get system.${cfg}.metric` ; do
+    case $metric in
+      netdev)
+         for ifname in `awk -F: 'NF>1 { print $1 }' /proc/net/dev | tr '.' '_'` ; do
+           metrics=$metrics" netdev."$ifname
+           done
+         ;;
+      *) metrics=$metrics" "$metric
+         ;;
+    done
+
+  echo $metrics | tr ' ' ','
+}
+
+
 while getopts "rd:w:m:" opt ; do
 
   case $opt in
@@ -45,7 +69,7 @@ while getopts "rd:w:m:" opt ; do
        ;;
     c) pull_mode="check"
        ;;
-    m) metrics=${OPTARG}
+    m) test ${OPTARG} = "auto" && metrics=`guess_metrics` || metrics=${OPTARG}
        ;;
     f) pull_mode="upgrade"
        ;;
