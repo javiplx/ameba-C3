@@ -85,4 +85,5 @@ class StatsCollectorAddHost ( __baseclass.AbstractRegisterCallback ) :
             for line in outlines :
                 cfg.write( line )
             cfg.close()
+            os.system( "RRDcreator %s %s" % ( metric , hostname ) )
 
