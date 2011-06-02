@@ -12,7 +12,7 @@
 # General Public License for more details.
 
 
-version="0.9.3"
+version="0.9.4"
 
 distroname=OpenWrt_`cat /etc/openwrt_version`
 random_wait="300"
@@ -51,6 +51,7 @@ guess_metrics() {
          ;;
       *) metrics=$metrics" "$metric
          ;;
+      esac
     done
 
   echo $metrics | tr ' ' ','
@@ -152,8 +153,13 @@ case $action in
       exit 1
       fi
     if [ ${pull_mode} = "upgrade" ] ; then
-      echo "WARNING : upgrade mode not yet available"
-      status="CRITICAL"
+      opkg -V 0 upgrade > /dev/null
+      if [ $? -eq 1 ] ; then
+        status="OK"
+      else
+        status="ERROR"
+        fi
+      fi
     else
       test -n "${random_wait}" && sleep ${random_wait}
       opkg -V 0 update 2> /dev/null && opkg -test upgrade | grep -q '^Upgrading '
