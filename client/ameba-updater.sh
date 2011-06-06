@@ -159,7 +159,6 @@ case $action in
       else
         status="ERROR"
         fi
-      fi
     else
       test -n "${random_wait}" && sleep ${random_wait}
       opkg -V 0 update 2> /dev/null && opkg -test upgrade | grep -q '^Upgrading '
