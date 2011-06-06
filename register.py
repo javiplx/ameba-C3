@@ -49,7 +49,7 @@ def handler ( req ) :
             error_msg.append( "UUID %s" % args['UUID'] )
         dbvalues = db.add_node( args , req )
         db.close()
-        callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
+        callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )
     except ImportError , ex :
         db.close()
         error_msg.append( "UUID cannot be returned" )
