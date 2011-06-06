@@ -36,7 +36,10 @@ def run_stage ( stage_name , arglist ) :
         raise Exception( "Unknown stage '%s'" % stage_name )
     for cb_name in __callbacks__[ stage_name ] :
         cb = cb_name()
-        apply( cb.run , arglist )
+        try :
+            apply( cb.run , arglist )
+        except :
+            pass
 
 
 for path in __path__ :
