@@ -125,6 +125,7 @@ class Database :
         dbvalues = { 'type':"node" ,
                      'distro':args['DISTRO'] ,
                      'metrics':args['METRICS'] ,
+                     'services':args['SERVICES'] ,
                      'hostname':args['HOSTNAME'] ,
                      'registration_date':time.mktime(time.gmtime())
                      }
@@ -137,6 +138,7 @@ class Database :
         field_names = ( "distro" ,
                         "channels" ,
                         "metrics" ,
+                        "services" ,
                         "hostname" ,
                         "hostaddress"
                         ) + self.field_names

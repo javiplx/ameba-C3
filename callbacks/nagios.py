@@ -50,6 +50,19 @@ group_template = """define hostgroup{
 """
 
 
+services_list = {}
+services_list['ping'] = { 'template':"local-service" , 'check_command':"check_ping!100.0,20%!500.0,60%" }
+services_list['webserver'] = { 'template':"local-service" , 'check_command':"check_http" }
+
+service_template = """define service{
+        use			%(template)s
+        host_name		%(hostname)s
+        service_description	%(service)s
+        check_command		%(check_command)s
+        }
+"""
+
+
 def send_command ( command , hostname=None , msg=None ) :
     fd = open( commandfile , 'a' )
     if hostname or msg :
@@ -59,8 +72,10 @@ def send_command ( command , hostname=None , msg=None ) :
     fd.close()
 
 # FIXME : Permissions
-def write_conf ( filename , template , values ) :
+def write_conf ( filename , template , values , extra=None ) :
     name = os.path.join( cfg_dir , "%s.cfg" % filename )
+    if extra :
+        values.update( extra )
     fd = open( name , 'w' )
     fd.write( template % values )
     fd.close()
@@ -77,6 +92,10 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
         write_conf( uuid , node_template , _dbvalues )
 
         write_conf( _dbvalues['distro'].replace("/"," ") , group_template , _dbvalues )
+
+        for service in _dbvalues['services'].split(',') :
+            services_list[service]['service'] = service
+            write_conf( "%s-%s" % ( uuid , service ) , service_template , _dbvalues , services_list[service] )
 
         if restart_allowed :
             send_command( "RESTART_PROGRAM" )
