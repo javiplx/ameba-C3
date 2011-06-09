@@ -124,11 +124,15 @@ class Database :
 
         dbvalues = { 'type':"node" ,
                      'distro':args['DISTRO'] ,
-                     'metrics':args['METRICS'] ,
-                     'services':args['SERVICES'] ,
                      'hostname':args['HOSTNAME'] ,
                      'registration_date':time.mktime(time.gmtime())
                      }
+
+        if args.has_key( 'METRICS' ) :
+            dbvalues[ "metrics" ] = args['METRICS']
+
+        if args.has_key( 'SERVICES' ) :
+            dbvalues[ "services" ] = args['SERVICES']
 
         if req :
             dbvalues[ "hostaddress" ] = req.get_remote_host()

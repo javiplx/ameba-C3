@@ -93,9 +93,10 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
 
         write_conf( _dbvalues['distro'].replace("/"," ") , group_template , _dbvalues )
 
-        for service in _dbvalues['services'].split(',') :
-            services_list[service]['service'] = service
-            write_conf( "%s-%s" % ( uuid , service ) , service_template , _dbvalues , services_list[service] )
+        if _dbvalues.get( 'services' ) :
+            for service in _dbvalues['services'].split(',') :
+                services_list[service]['service'] = service
+                write_conf( "%s-%s" % ( uuid , service ) , service_template , _dbvalues , services_list[service] )
 
         if restart_allowed :
             send_command( "RESTART_PROGRAM" )
