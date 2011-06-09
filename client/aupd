@@ -26,7 +26,7 @@ config = ConfigParser.RawConfigParser()
 config.read( configfile )
 
 usage = """
-\t%prog [--autogenerate|--requestuuid] [--distro distroname] register [url [uuid] ]
+\t%prog [--autogenerate|--requestuuid] [--distro distroname] [--metrics metric,...] [--services service,...] register [url [uuid] ]
 \t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] [--logfile filename] pulldaemon
 \t%prog [--random-wait seconds] [--check-only|--force-upgrade] pull
 \t%prog login
@@ -170,6 +170,13 @@ def register ( config , options , args ) :
         return False
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
+
+    if options.metrics :
+        data['METRICS'] = options.metrics
+
+    if options.services :
+        data['SERVICES'] = options.services
+
     ret = amebaC3_client.client.register( _url , data )
     if ret :
         # FIXME : If we supply url & uuid on command line matching those in config file, we will rewrite it
@@ -416,6 +423,12 @@ parser.add_option("--requestuuid",
 
 parser.add_option("--distro", dest="distro",
         help="Set primary channel")
+
+parser.add_option("--metrics", dest="metrics",
+        help="List of metrics")
+
+parser.add_option("--services", dest="services",
+        help="Service checks to be enabled")
 
 parser.add_option("--sessid", dest="sessid",
         help="Set session ID")
