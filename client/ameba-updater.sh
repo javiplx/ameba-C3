@@ -58,7 +58,7 @@ guess_metrics() {
 }
 
 
-while getopts "rd:w:m:" opt ; do
+while getopts "rd:w:m:cf" opt ; do
 
   case $opt in
     d) test -n "${distroname}" -a "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
