@@ -22,6 +22,8 @@ restart_allowed = True
 cfg_dir = "/etc/nagios/amebaC3"
 commandfile = "/var/spool/nagios/cmd/nagios.cmd"
 
+stats_url = "http://r26936.ovh.net/stats"
+
 node_template = """define host{
         use                     ameba-node
         host_name               %(hostname)s
@@ -33,7 +35,7 @@ node_template = """define host{
 define hostextinfo{
         host_name     %(hostname)s
         notes         %(uuid)s
-        }
+        %(extra)s}
 
 define service{
         use                             ameba-service
@@ -85,8 +87,11 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
 
     def run ( self , uuid , dbvalues ) :
 
-        _dbvalues = { 'uuid':uuid }
+        _dbvalues = { 'uuid':uuid ,'extra':''}
         _dbvalues.update( dbvalues )
+
+        if dbvalues.has_key( 'metrics' ) :
+            _dbvalues['extra'] = "notes_url     %s/%s\n        " % ( stats_url , _dbvalues['hostname'] )
 
         # FIXME : Exception if exists?
         write_conf( uuid , node_template , _dbvalues )
