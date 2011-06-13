@@ -153,6 +153,7 @@ case $action in
       exit 1
       fi
     if [ ${pull_mode} = "upgrade" ] ; then
+      test -n "${random_wait}" && sleep ${random_wait}
       opkg -V 0 upgrade > /dev/null
       if [ $? -eq 1 ] ; then
         status="OK"
@@ -161,7 +162,7 @@ case $action in
         fi
     else
       test -n "${random_wait}" && sleep ${random_wait}
-      opkg -V 0 update 2> /dev/null && opkg -test upgrade | grep -q '^Upgrading '
+      opkg -V 0 update 2> /dev/null && opkg -test upgrade 2> /dev/null | grep -q '^Upgrading '
       if [ $? -eq 1 ] ; then
         status="OK"
       else
