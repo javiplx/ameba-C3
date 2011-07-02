@@ -18,6 +18,7 @@ import os
 
 __all__ = []
 __callbacks__ = { 'register':[] , 'alive':[] , 'update':[] }
+__enabled__ = [ 'nagios' , 'stats-collector' ]
 
 
 def register ( item ) :
@@ -34,6 +35,9 @@ def register ( item ) :
 def run_stage ( stage_name , request , arglist ) :
     if stage_name not in __callbacks__.keys() :
         raise Exception( "Unknown stage '%s'" % stage_name )
+    if not __callbacks__[ stage_name ] :
+        request.log_error( "Empty stage '%s'" % stage_name )
+        return
     for cb_name in __callbacks__[ stage_name ] :
         cb = cb_name()
         try :
@@ -53,5 +57,6 @@ for modname in __all__ :
         item = getattr( module , name )
         if type(item) == types.ClassType :
             if issubclass( item , __baseclass.BaseCallback ) :
+              if not __enabled__ or module.callback_name in __enabled__ :
                 register( item )
 

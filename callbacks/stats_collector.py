@@ -12,6 +12,7 @@
 
 
 import __baseclass
+callback_name = "stats-collector"
 
 import os , sys
 

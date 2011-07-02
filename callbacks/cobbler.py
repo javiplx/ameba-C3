@@ -12,6 +12,7 @@
 
 
 import __baseclass
+callback_name = "cobbler"
 
 import xmlrpclib
 

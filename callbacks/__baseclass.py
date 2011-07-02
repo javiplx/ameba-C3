@@ -11,6 +11,8 @@
 # General Public License for more details.
 
 
+callback_name = None
+
 class BaseCallback :
 
     def run ( self , *args , **kwargs ) :

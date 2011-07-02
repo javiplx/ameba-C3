@@ -12,6 +12,7 @@
 
 
 import __baseclass
+callback_name = "nagios"
 
 import time
 import os
