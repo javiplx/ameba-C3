@@ -47,6 +47,8 @@ def getHosts ( conf ) :
 
 class StatsCollectorAddHost ( __baseclass.AbstractRegisterCallback ) :
 
+    name = callback_name
+
     def run ( self , uuid , dbvalues ) :
 
         if not dbvalues.has_key( 'metrics' ) :

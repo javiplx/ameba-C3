@@ -15,6 +15,8 @@ callback_name = None
 
 class BaseCallback :
 
+    name = None
+
     def run ( self , *args , **kwargs ) :
         pass
 

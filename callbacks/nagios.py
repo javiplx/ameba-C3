@@ -86,6 +86,8 @@ def write_conf ( filename , template , values , extra=None ) :
 
 class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
 
+    name = callback_name
+
     def run ( self , uuid , dbvalues ) :
 
         _dbvalues = { 'uuid':uuid ,'extra':''}
@@ -110,11 +112,15 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
 
 class NagiosHostUpdate ( __baseclass.AbstractAliveCallback ) :
 
+    name = callback_name
+
     def run ( self , sess ) :
         send_command( "PROCESS_HOST_CHECK_RESULT" , sess['HOSTNAME'] , "0;Ameba C3 - Logged in" )
 
 
 class NagiosServiceUpdate ( __baseclass.AbstractUpdateCallback ) :
+
+    name = callback_name
 
     def run( self , sess , status ) :
         if status == "OK" :

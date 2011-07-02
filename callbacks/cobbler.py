@@ -25,6 +25,8 @@ cobbler_pass = "admin"
 
 class CobblerAddHost ( __baseclass.AbstractRegisterCallback ) :
 
+    name = callback_name
+
     def run ( self , uuid , dbvalues ) :
 
         conn = xmlrpclib.ServerProxy( cobbler_server )
