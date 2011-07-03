@@ -14,6 +14,8 @@
 
 version="0.9.4"
 
+retcode=2
+
 distroname=OpenWrt_`cat /etc/openwrt_version`
 random_wait="300"
 pull_mode="check"
@@ -106,19 +108,24 @@ case $action in
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
     test -n "${metrics}" && postdata="${postdata}&METRICS=${metrics}"
     test -n "${services}" && postdata="${postdata}&SERVICES=${services}"
-    wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}"
-    if [ ${uuid} = "__REQUEST__" ] ; then
+    wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}" 2> /dev/null
+    if [ -s /tmp/aupd.response.$$ ] ; then
+     if [ ${uuid} = "__REQUEST__" ] ; then
       uuid=`sed -n -e 's/^UUID //p' /tmp/aupd.response.$$`
       response=`grep -v '^UUID' /tmp/aupd.response.$$`
-      rm -f /tmp/aupd.response.$$
+     else
+      response=`cat /tmp/aupd.response.$$`
       fi
-    if [ "${response}" = "OK" ] ; then
+     if [ "${response}" = "OK" ] ; then
       touch /etc/config/aupd
       uci set aupd.main=global
       uci set aupd.main.url=${url}
       uci set aupd.main.uuid=${uuid}
       uci commit aupd
+      retcode=0
       fi
+     fi
+    rm -f /tmp/aupd.response.$$
     ;;
 
   login)
@@ -128,11 +135,14 @@ case $action in
       fi
     url=`uci get aupd.main.url`
     uuid=`uci get aupd.main.uuid`
-    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login"`
-    set -- `echo $response | head -1`
-    if [ $# -eq 2 -a "$1" = "ID" ] ; then
+    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
+    if [ -n "${response}" ] ; then
+     set -- `echo $response | head -1`
+     if [ $# -eq 2 -a "$1" = "ID" ] ; then
       sessid=$2
+      retcode=0
       fi
+     fi
     ;;
 
   loginout)
@@ -143,12 +153,17 @@ case $action in
     status=$1
     url=`uci get aupd.main.url`
     uuid=`uci get aupd.main.uuid`
-    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login"`
-    set -- `echo $response | head -1`
-    if [ $# -eq 2 -a "$1" = "ID" ] ; then
+    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
+    if [ -n "${response}" ] ; then
+     set -- `echo $response | head -1`
+     if [ $# -eq 2 -a "$1" = "ID" ] ; then
       sessid=$2
+      response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" "${url}/logoff" 2> /dev/null`
+      if [ -n "${response}" ] ; then
+        retcode=0
+        fi
       fi
-    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" "${url}/logoff"`
+     fi
     ;;
 
   pull)
@@ -175,17 +190,24 @@ case $action in
       fi
     url=`uci get aupd.main.url`
     uuid=`uci get aupd.main.uuid`
-    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login"`
-    set -- `echo $response | head -1`
-    if [ $# -eq 2 -a "$1" = "ID" ] ; then
+    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
+    if [ -n "${response}" ] ; then
+     set -- `echo $response | head -1`
+     if [ $# -eq 2 -a "$1" = "ID" ] ; then
       sessid=$2
+      response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" "${url}/logoff" 2> /dev/null`
+      if [ -n "${response}" ] ; then
+        retcode=0
+        fi
       fi
-    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" "${url}/logoff"`
+     fi
     ;;
 
   *)
     print_usage ${progname} "Unknown operation"
+    retcode=1
     ;;
 
   esac
 
+exit ${retcode}
