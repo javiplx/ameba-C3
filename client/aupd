@@ -138,12 +138,14 @@ def register ( config , options , args ) :
         if not uuid :
             logger.error( "Supply explicit UUID, no python module available for autogeneration" )
             return False
+        options.store = True
         _uuid = uuid.uuid4()
 
     if options.requestuuid :
         if _uuid :
             logger.error( "Attempting to request UUID from server while giving one in %s" % uuid_location )
             return False
+        options.store = True
         _uuid = "__REQUEST__"
 
     if not _uuid :
