@@ -1,13 +1,13 @@
 #!/bin/sh
 
 # Registration
-# ameba-updater.sh -r register http://r26936.ovh.net/amebaC3
+# ameba-updater.sh -r -m auto register http://r26936.ovh.net/amebaC3
 
 mkdir -p ameba-wrt/CONTROL
 
 cat <<EOF > ameba-wrt/CONTROL/control
 Package: amebac3-shell-client
-Version: 0.9.3-2
+Version: 1.0-1
 Architecture: all
 Maintainer: Javier Palacios <javiplx@gmail.com>
 Description: AmebaC3 update shell agent

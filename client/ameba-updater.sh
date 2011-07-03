@@ -94,6 +94,9 @@ test -n "${action}" && shift $OPTIND
 
 . /etc/functions.sh
 
+_wait=`uci get aupd.pulldaemon.random-wait 2> /dev/null`
+test -n ${_wait} && random_wait=${_wait}
+
 case $action in
 
   register)
