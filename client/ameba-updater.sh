@@ -16,7 +16,7 @@ version="0.9.4"
 
 retcode=2
 
-distroname=OpenWrt_`cat /etc/openwrt_version`
+distroname=OpenWrt_`cat /etc/openwrt_version 2> /dev/null`
 random_wait="300"
 pull_mode="check"
 metrics=""
@@ -36,8 +36,6 @@ ${prog} loginout
 EOF
 }
 
-
-. /etc/functions.sh
 
 guess_metrics() {
 
@@ -61,7 +59,7 @@ guess_metrics() {
 }
 
 
-while getopts "rd:w:m:cfs:" opt ; do
+while getopts "hrd:w:m:cfs:" opt ; do
 
   case $opt in
     d) test -n "${distroname}" -a "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
@@ -79,15 +77,22 @@ while getopts "rd:w:m:cfs:" opt ; do
        ;;
     f) pull_mode="upgrade"
        ;;
-    *) print_usage ${progname}
+    h|*) print_usage ${progname}
        exit 1
        ;;
     esac
 
   done
 
+if [ $# -eq 0 ] ; then
+  print_usage ${progname}
+  exit 1
+  fi
+
 eval action=\$$OPTIND
 test -n "${action}" && shift $OPTIND
+
+. /etc/functions.sh
 
 case $action in
 
