@@ -18,7 +18,18 @@ import os
 
 __all__ = []
 __callbacks__ = { 'register':[] , 'alive':[] , 'update':[] }
-__enabled__ = [ 'nagios' , 'stats-collector' ]
+__enabled__ = []
+
+
+import ConfigParser
+
+configfile = "/etc/amebaC3.conf"
+
+config = ConfigParser.RawConfigParser()
+config.read( configfile )
+
+if config.has_option( 'callbacks' , 'enabled' ) :
+    __enabled__.extend( config.get( 'callbacks' , 'enabled' ).split() )
 
 
 def register ( item ) :
