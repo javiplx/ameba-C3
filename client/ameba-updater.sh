@@ -18,6 +18,7 @@ distroname=OpenWrt_`cat /etc/openwrt_version`
 random_wait="300"
 pull_mode="check"
 metrics=""
+services=""
 
 progname=$0
 
@@ -26,7 +27,7 @@ print_usage () {
     shift
     test $# -gt 0 && echo "ERROR : $*"
 cat <<EOF
-${prog} [-r] [-d distroname] [-m metric1,metric2,...] register url [uuid]
+${prog} [-r] [-d distroname] [-m metric1,metric2,...] [-s service1,service2,...] register url [uuid]
 ${prog} [-w seconds] [-c|-f] pull
 ${prog} login
 ${prog} loginout
@@ -58,7 +59,7 @@ guess_metrics() {
 }
 
 
-while getopts "rd:w:m:cf" opt ; do
+while getopts "rd:w:m:cfs:" opt ; do
 
   case $opt in
     d) test -n "${distroname}" -a "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
@@ -71,6 +72,8 @@ while getopts "rd:w:m:cf" opt ; do
     c) pull_mode="check"
        ;;
     m) test ${OPTARG} = "auto" && metrics=`guess_metrics` || metrics=${OPTARG}
+       ;;
+    s) services=${OPTARG}
        ;;
     f) pull_mode="upgrade"
        ;;
@@ -102,6 +105,7 @@ case $action in
     distroname=`echo $distroname | tr ' ' '_'`
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
     test -n "${metrics}" && postdata="${postdata}&METRICS=${metrics}"
+    test -n "${services}" && postdata="${postdata}&SERVICES=${services}"
     wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}"
     if [ ${uuid} = "__REQUEST__" ] ; then
       uuid=`sed -n -e 's/^UUID //p' /tmp/aupd.response.$$`
