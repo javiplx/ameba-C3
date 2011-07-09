@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+
+build: build-stamp
+build-stamp:
+	dh_testdir
+	python setup.py build
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -rf build-stamp build
+	-python setup.py clean
+	dh_clean 
+
+binary:
+	python setup.py install --root $(CURDIR)/debian/tmp
+	dh_gencontrol
+	dh_builddeb
+
