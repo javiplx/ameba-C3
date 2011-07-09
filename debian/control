@@ -1,0 +1,12 @@
+Source: amebac3
+Section: admin
+Priority: optional
+Maintainer: Javier Palacios <javiplx@gmail.com>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.1
+
+Package: amebac3
+Architecture: all
+Depends: apache2.2-common
+Recommends: nagios3
+Description: AmebaC3 server
