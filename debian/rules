@@ -17,6 +17,13 @@ clean:
 
 binary:
 	python setup.py install --root $(CURDIR)/debian/tmp
+	mkdir -p $(CURDIR)/debian/tmp/etc/apache2/conf.d
+	cp amebaC3_sample.conf $(CURDIR)/debian/tmp/etc/amebaC3.conf
+	cp amebaC3_httpd_sample.conf $(CURDIR)/debian/tmp/etc/apache2/conf.d/amebaC3
+	mkdir -p $(CURDIR)/debian/tmp/etc/nagios3/conf.d
+	cp callbacks/amebaC3_templates.cfg $(CURDIR)/debian/tmp/etc/nagios3/conf.d
+	mkdir -p $(CURDIR)/debian/tmp/usr/lib/nagios/plugins
+	cp callbacks/ameba_freshness_exceeded.sh $(CURDIR)/debian/tmp/usr/lib/nagios/plugins
 	dh_gencontrol
 	dh_builddeb
 
