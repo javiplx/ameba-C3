@@ -3,7 +3,7 @@
 Summary: AmebaC3 update agent
 Name: amebaC3_client
 Version: 1.4
-Release: 1%{dist}
+Release: 2%{dist}
 Source: %{name}-%{version}.tar.gz
 License: GPLv2
 Group: System/Management
@@ -18,7 +18,7 @@ BuildRoot: %{_tmppath}/%{name}-root
 
 %prep
 
-%setup -q -n %{name}-1.4
+%setup -q -n %{name}-%{version}
 
 %build
 
@@ -47,6 +47,13 @@ cp ameba-updater %{buildroot}/etc/init.d
 
 %clean
 rm -rf %{buildroot}
+
+
+%post
+
+chkconfig --add ameba-updater
+# reset should only be run upon fresh install
+chkconfig --level 2345 ameba-updater off
 
 
 %files
