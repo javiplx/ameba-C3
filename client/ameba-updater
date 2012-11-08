@@ -13,7 +13,7 @@
 
 # ameba-updater          Start/Stop the amebaC3 client daemon.
 #
-# chkconfig: 2345 90 60
+# chkconfig: - 90 60
 # description: aupd is the agent program of amebaC3, in charge of perform \
 #              the system status verifications and upgrades
 # processname: aupd

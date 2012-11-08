@@ -3,7 +3,7 @@
 Summary: AmebaC3 update agent
 Name: amebaC3_client
 Version: 1.4
-Release: 2%{dist}
+Release: 5%{dist}
 Source: %{name}-%{version}.tar.gz
 License: GPLv2
 Group: System/Management
@@ -51,9 +51,15 @@ rm -rf %{buildroot}
 
 %post
 
-chkconfig --add ameba-updater
-# reset should only be run upon fresh install
-chkconfig --level 2345 ameba-updater off
+if [ "$1" = "1" ] ; then
+  chkconfig --add ameba-updater
+  fi
+
+%preun
+
+if [ "$1" = "0" ] ; then
+  chkconfig --del ameba-updater
+  fi
 
 
 %files
