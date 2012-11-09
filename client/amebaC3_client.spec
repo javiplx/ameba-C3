@@ -53,11 +53,14 @@ rm -rf %{buildroot}
 
 if [ "$1" = "1" ] ; then
   chkconfig --add ameba-updater
+elif [ "$1" = "2" ] ; then
+  /etc/init.d/ameba-updater condrestart
   fi
 
 %preun
 
 if [ "$1" = "0" ] ; then
+  /etc/init.d/ameba-updater stop
   chkconfig --del ameba-updater
   fi
 
