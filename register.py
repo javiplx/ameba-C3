@@ -17,6 +17,13 @@ from mod_python import apache , util
 
 import time
 
+def send_error ( req , error_msgs ) :
+    req.status = apache.HTTP_BAD_REQUEST
+    req.content_type = "text/plain"
+    map( lambda x : req.log_error( "handler : %s" % x ) , error_msgs )
+    req.write( "\n".join( error_msgs ) )
+    return apache.OK
+
 def handler ( req ) :
 
     # FIXME : reuse code to get unique UUID on args
@@ -30,16 +37,9 @@ def handler ( req ) :
             if not args.has_key( required ) :
                 missing.append( required )
         if missing :
-            error_msg.append( "%s missing" % ",".join(missing) )
+            return send_error( req , "%s missing" % ", ".join(missing) )
     else :
-        error_msg.append( "Malformed request" )
-
-    if error_msg :
-        map( lambda x : req.log_error( "handler : %s" % x ) , error_msg )
-        req.status = apache.HTTP_BAD_REQUEST
-        req.content_type = "text/plain"
-        req.write( "\n".join( error_msg ) )
-        return apache.OK
+        return send_error( req , "Malformed request" )
 
     db = database.get( database.dbtype )
     try :
