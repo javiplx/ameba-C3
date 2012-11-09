@@ -52,7 +52,7 @@ def handler ( req ) :
             # NOTE : this is actually a protocol mismatch ??
             msg = "uuid module not available to fulfill __REQUEST__ petition from %s" % args['HOSTNAME']
             req.log_error( "register handler : %s" % msg , apache.APLOG_CRIT )
-            return send_error( req , "UUID cannot be returned" )
+            return send_error( req , "UUID cannot be generated" )
         args['UUID'] = "%s" % uuid.uuid4()
         error_msg.append( "UUID %s" % args['UUID'] )
 
@@ -67,7 +67,7 @@ def handler ( req ) :
             error_msg.append( "System already registered" )
             map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_INFO ) , error_msg )
         else :
-            error_msg.append( "node '%s' has UUID %s" % ( dbvalues['hostname'] , ex.message ) )
+            error_msg.append( "UUID owned by '%s'" % dbvalues['hostname'] )
             map( lambda x : req.log_error( "register handler : %s" % x ) , error_msg )
             req.status = apache.HTTP_BAD_REQUEST 
     except database.C3DBException , ex :
