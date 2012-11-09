@@ -17,6 +17,8 @@ clean:
 
 binary:
 	python setup.py install --root $(CURDIR)/debian/tmp
+	mkdir -p $(CURDIR)/debian/tmp/etc/init.d
+	cp ameba-updater $(CURDIR)/debian/tmp/etc/init.d
 	dh_gencontrol
 	dh_builddeb
 

@@ -25,7 +25,7 @@ setup(
 	package_dir = { 'amebaC3_client':"." } ,
 	packages = [ "amebaC3_client" ] ,
 	data_files = [
-		( 'share/doc/amebaC3_client/samples' , [ "sample.conf" , "crontab.line" , "ameba-updater" ] ) ,
+		( 'share/doc/amebaC3_client/samples' , [ "sample.conf" , "crontab.line" ] ) ,
 		( 'share/doc/amebaC3_client/externals' , [ "externals/15ameba-updater" , "externals/ameba-updater.py" ] )
 		] ,
 	license = "GPLv2"

@@ -7,4 +7,5 @@ Standards-Version: 3.6.1
 
 Package: amebac3-client
 Architecture: all
+Depends: python
 Description: AmebaC3 update shell agent

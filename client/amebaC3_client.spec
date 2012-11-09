@@ -2,7 +2,7 @@
 
 Summary: AmebaC3 update agent
 Name: amebaC3_client
-Version: 1.3.99
+Version: 1.4
 Release: 1%{dist}
 Source: %{name}-%{version}.tar.gz
 License: GPLv2
@@ -42,6 +42,8 @@ check-interval = 3600.0
 check-only = True
 EOF
 
+mkdir -p %{buildroot}/etc/init.d
+cp ameba-updater %{buildroot}/etc/init.d
 
 %clean
 rm -rf %{buildroot}
@@ -51,9 +53,10 @@ rm -rf %{buildroot}
 %defattr(0644,root,root,0755)
 %doc README INSTALL license.txt 
 
-%config /etc/aupd.conf
+%config(noreplace) /etc/aupd.conf
 
 %attr(0755,root,root) /usr/bin/aupd
+%attr(0755,root,root) /etc/init.d/ameba-updater
 
 %{python_site}/%{name}
 
