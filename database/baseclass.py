@@ -108,12 +108,9 @@ class Database :
 
     def get_user_group( self , uuid ) :
 
-        try :
-            record = self.retrieve( uuid )
-        except KeyNotFound , ex :
-            return False 
+        record = self.get_record( uuid , "user" )
 
-        if record.get( 'type' ) == "user" :
+        if record :
             return record.get( 'group' )
 
         return None
