@@ -20,22 +20,6 @@ import amebaC3_client.client
 
 import ConfigParser
 
-configfile = "/etc/aupd.conf"
-
-config = ConfigParser.RawConfigParser()
-config.read( configfile )
-
-usage = """
-\t%prog [--autogenerate|--requestuuid] [--distro distroname] [--metrics metric,...] [--services service,...] register [url [uuid] ]
-\t%prog [--check-interval seconds] [--random-wait seconds] [--check-only|--force-upgrade] [--store] [--logfile filename] pulldaemon
-\t%prog [--random-wait seconds] [--check-only|--force-upgrade] pull
-\t%prog login
-\t%prog --sessid id logout
-\t%prog loginout
-"""
-
-version = "%%prog %s" % __version__
-
 import logging
 
 console = logging.StreamHandler()
@@ -45,6 +29,20 @@ console.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler( console )
 
+
+#FIXME : Verify user/permissions before writing config, or even calling urlopen
+def store_config( config ) :
+    fd = open( configfile , 'w' )
+    config.write( fd )
+    fd.close()
+
+
+try :
+    import uuid
+except :
+    uuid = False
+
+import socket
 
 import os , glob
 
@@ -71,19 +69,6 @@ def guess_distro ( ) :
         fd.close()
         return v
 
-
-#FIXME : Verify user/permissions before writing config, or even calling urlopen
-def store_config( config ) :
-    fd = open( configfile , 'w' )
-    config.write( fd )
-    fd.close()
-
-
-try :
-    import uuid
-except :
-    uuid = False
-import socket
 
 def register ( config , options , args ) :
 
@@ -128,25 +113,24 @@ def register ( config , options , args ) :
             uuid_location = "configuration file"
 
     if options.autouuid and options.requestuuid :
-        logger.error( "Autogeneration and request for UUID cannot be mixed" )
+        logger.error( "UUID autogeneration and request cannot be mixed" )
         return False
 
     if options.autouuid :
         if _uuid :
-            logger.error( "Autogeneration requested with UUID given in %s" % uuid_location )
+            logger.error( "Autogeneration requested with UUID given on %s" % uuid_location )
             return False
         if not uuid :
             logger.error( "Supply explicit UUID, no python module available for autogeneration" )
             return False
-        options.store = True
         _uuid = uuid.uuid4()
-
-    if options.requestuuid :
-        if _uuid :
-            logger.error( "Attempting to request UUID from server while giving one in %s" % uuid_location )
-            return False
         options.store = True
+    elif options.requestuuid :
+        if _uuid :
+            logger.error( "Requesting UUID from server while value given on %s" % uuid_location )
+            return False
         _uuid = "__REQUEST__"
+        options.store = True
 
     if not _uuid :
         errors.append( "UUID" )
@@ -170,6 +154,7 @@ def register ( config , options , args ) :
         logger.error( "Too many arguments" )
         parser.print_help()
         return False
+
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
 
@@ -292,6 +277,7 @@ def get_lock ( filename="/tmp/aupd.lock" ) :
         return None
     return fp
 
+
 import time , random
 
 def pull ( config , options , args=() ) :
@@ -299,6 +285,9 @@ def pull ( config , options , args=() ) :
     if args :
         logger.error( "Too many arguments" )
         parser.print_help()
+        return False
+
+    if not check_configuration() :
         return False
 
     if not config.has_section( 'pull' ) :
@@ -328,9 +317,6 @@ def pull ( config , options , args=() ) :
         logger.critical( "No '%s' defined on pull section" % cmds_parname )
         return False
     _cmds = config.get( 'pull' , cmds_parname )
-
-    if not check_configuration() :
-        return False
 
     lock = get_lock()
     if not lock :
@@ -364,6 +350,9 @@ def pulldaemon ( config , options , args ) :
         parser.print_help()
         return False
 
+    if not check_configuration() :
+        return False
+
     if not options.interval :
         if config.has_option( 'pulldaemon' , 'check-interval' ) :
             options.interval = config.getfloat( 'pulldaemon' , 'check-interval' )
@@ -371,15 +360,13 @@ def pulldaemon ( config , options , args ) :
             logger.critical( "No checking interval specified on configuration or command line" )
             return False
 
-    if options.wait is None and config.has_option( 'pulldaemon' , 'random-wait' ) :
-        options.wait = config.getfloat( 'pulldaemon' , 'random-wait' )
+    if options.wait is None :
+        if config.has_option( 'pulldaemon' , 'random-wait' ) :
+            options.wait = config.getfloat( 'pulldaemon' , 'random-wait' )
 
     if options.check_only is None :
         if config.has_option( 'pulldaemon' , 'check-only' ) :
             options.check_only = config.getboolean( 'pulldaemon' , 'check-only' )
-
-    if not check_configuration() :
-        return False
 
     if options.store :
         if not config.has_section( 'pulldaemon' ) :
@@ -408,12 +395,27 @@ command = { 'register':register ,
             'pulldaemon':pulldaemon ,
             }
 
+
 import optparse
+
+usage = """
+	%prog [--autogenerate|--requestuuid] [--distro distroname] [--metrics metric,...] [--services service,...] register [url [uuid] ]
+	%prog [--random-wait seconds] [--check-only|--force-upgrade] [--check-interval seconds] [--store] [--logfile filename] pulldaemon
+	%prog [--random-wait seconds] [--check-only|--force-upgrade] [--silent] pull
+	%prog login
+	%prog --sessid id logout
+	%prog loginout
+"""
+
+version = "%%prog %s" % __version__
 
 parser = optparse.OptionParser(usage=usage, version=version)
 parser.set_defaults( autouuid=False )
 parser.set_defaults( requestuuid=False )
 parser.set_defaults( check_only=True )
+
+
+# register options
 
 parser.add_option("--autogenerate",
         action="store_true", dest="autouuid",
@@ -421,19 +423,29 @@ parser.add_option("--autogenerate",
 
 parser.add_option("--requestuuid",
         action="store_true", dest="requestuuid",
-        help="Automatically generate a random UUID")
+        help="Request UUID from server")
 
 parser.add_option("--distro", dest="distro",
         help="Set primary channel")
 
 parser.add_option("--metrics", dest="metrics",
-        help="List of metrics")
+        help="Reported metrics")
 
 parser.add_option("--services", dest="services",
-        help="Service checks to be enabled")
+        help="Services to be monitored")
+
+
+# logout options
 
 parser.add_option("--sessid", dest="sessid",
         help="Set session ID")
+
+
+# pull/pulldaemon options
+
+parser.add_option("--random-wait",
+	dest="wait", type="float",
+        help="Set maximum random waiting time")
 
 parser.add_option("--check-only",
         action="store_true", dest="check_only",
@@ -443,29 +455,36 @@ parser.add_option("--force-upgrade",
         action="store_false", dest="check_only",
         help="Force a system upgrade")
 
+
+# pull specific options
+
+parser.add_option("--silent",
+        action="store_true", dest="silent", default=False,
+        help="Run in silent mode (for console based execution)")
+
+
+# pulldaemon specific options
+
 parser.add_option("--check-interval",
 	dest="interval", type="float",
         help="Set time interval in seconds within checks")
-
-parser.add_option("--random-wait",
-	dest="wait", type="float",
-        help="Set maximum random waiting time")
-
-parser.add_option("--logfile", dest="logfile", default="/var/log/ameba_updater.log",
-        help="Specify logfile for daemon")
 
 parser.add_option("--store",
         action="store_true", dest="store", default=False,
         help="Store current parameter values into configuration file")
 
-parser.add_option("--silent",
-        action="store_true", dest="silent", default=False,
-        help="Run in silent mode (for con-based execution)")
+parser.add_option("--logfile", dest="logfile", default="/var/log/ameba_updater.log",
+        help="Specify logfile for daemon")
 
 
 import sys
 
 if __name__ == "__main__" :
+
+    configfile = "/etc/aupd.conf"
+
+    config = ConfigParser.RawConfigParser()
+    config.read( configfile )
 
     options , args = parser.parse_args()
 

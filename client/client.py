@@ -23,23 +23,24 @@ logger = logging.getLogger()
 
 def register ( url , data ) :
 
+    req = urllib2.Request( "%s/register" % url , data=urllib.urlencode( data ) )
+    req.add_header( "User-Agent" , "AmebaC3-Agent/%s" % __version__ )
+
     ret = False
 
     try :
-        req = urllib2.Request( "%s/register" % url , data=urllib.urlencode( data ) )
-        req.add_header( "User-Agent" , "AmebaC3-Agent/%s" % __version__ )
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
         logger.error( res.msg )
         map( logger.error , res.readlines() )
     else :
-        firstline = res.readline().splitlines()[0]
+        firstline = res.readline()
         if firstline == "OK" :
             ret = True
             secondline = res.readline()
             if secondline :
                 response = secondline.split()
-                if response[0] == "UUID" and len(response) == 2 :
+                if len(response) == 2 and response[0] == "UUID" :
                     ret = response[1]
                 else :
                     logger.error( secondline )
@@ -65,15 +66,14 @@ def login ( url , uuid ) :
         logger.error( res.msg )
         map( logger.error , res.readlines() )
     else :
-        firstline = res.readline().splitlines()[0].split()
-        if firstline and firstline[0] == "ID" and len(firstline) == 2 :
+        firstline = res.readline().split()
+        if len(firstline) == 2 and firstline[0] == "ID" :
             sessid = firstline[1]
             delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
-        else :
+        elif firstline :
             # NOTE : login warnings could appear mixed with errors on combined operations
-            if firstline :
-                logger.error( firstline )
-                map( logger.error , res.readlines() )
+            logger.error( firstline )
+            map( logger.error , res.readlines() )
 
     return sessid , delay
 
@@ -88,21 +88,24 @@ def logout ( url , sessid , failed=False ) :
     elif failed :
         req.add_header( "X-AmebaStatus" , "%s" % failed )
 
+    ret = False
+
     try :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
         logger.error( res.msg )
         map( logger.error , res.readlines() )
     else :
-        firstline = res.readline().splitlines()[0].split()
-        if firstline and firstline[0] == "ID" and len(firstline) == 2 :
-            return True
-        logger.error( "Logout failed" )
-        if firstline :
-            logger.error( firstline )
-            map( logger.error , res.readlines() )
+        firstline = res.readline().split()
+        if len(firstline) == 2 and firstline[0] == "ID" :
+            ret = True
+        else :
+            logger.error( "Logout failed" )
+            if firstline :
+                logger.error( firstline )
+                map( logger.error , res.readlines() )
 
-    return False
+    return ret
 
 
 def loginout ( url , uuid , failed=False ) :
@@ -134,6 +137,8 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
         logger.warning( "sleping %s secs until session gets active" % delay )
         time.sleep( delay )
 
+    ret = False
+
     # NOTE : As we are using external updaters, we need to use loginout instead of logout to end session
     for _cmdline in cmds :
         cmdline = _cmdline.strip()
@@ -163,8 +168,8 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
     else :
         # NOTE : If loginout fails here, we get an updated system failed telling to AmebaC3.
         # NOTE :     Do we actually want to return this as error?
-        return loginout ( url , uuid )
+        ret = loginout ( url , uuid )
 
-    return False
+    return ret
 
 
