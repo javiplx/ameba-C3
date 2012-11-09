@@ -22,16 +22,27 @@ class Database :
         raise InternalError( "Unimplemented abstract method" )
 
 
-    def add_record ( self , uuid , dbvalues ) :
+    def put ( self , uuid , dbvalues ) :
         raise InternalError( "Unimplemented abstract method" )
 
-    def retrieve ( self , uuid ) :
+    def get ( self , uuid ) :
         raise InternalError( "Unimplemented abstract method" )
+
+
+    def add_record ( self , uuid , dbvalues , field_names ) :
+
+        for key in dbvalues :
+            if key not in field_names + self.field_names :
+                raise UnknownField( key )
+
+        self.put( uuid , dbvalues )
+
+        return dbvalues
 
     def get_record( self , uuid , record_type ) :
 
         try :
-            record = self.retrieve( uuid )
+            record = self.get( uuid )
             if record.get( 'type' ) == record_type :
                 return record
         except KeyNotFound , ex :
@@ -81,13 +92,9 @@ class Database :
         field_names = ( "password" ,
                         "group" ,
                         "username"
-                        ) + self.field_names
+                        )
 
-        for key in dbvalues :
-            if key not in field_names :
-                raise UnknownField( key )
-
-        self.add_record( uuid , dbvalues )
+        self.add_record( uuid , dbvalues , field_names )
 
         return dbvalues
 
@@ -143,13 +150,9 @@ class Database :
                         "services" ,
                         "hostname" ,
                         "hostaddress"
-                        ) + self.field_names
+                        )
 
-        for key in dbvalues :
-            if key not in field_names :
-                raise UnknownField( key )
-
-        self.add_record( uuid , dbvalues )
+        self.add_record( uuid , dbvalues , field_names )
 
         return dbvalues
 

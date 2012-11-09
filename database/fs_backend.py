@@ -36,7 +36,7 @@ class Database ( baseclass.Database ) :
         os.unlink( lock )
 
 
-    def add_record ( self , uuid , dbvalues ) :
+    def put ( self , uuid , dbvalues ) :
 
         lock = self.lock_get( uuid , 1 )
         fname = os.path.join( self.dbenv , uuid )
@@ -51,7 +51,7 @@ class Database ( baseclass.Database ) :
 
         self.lock_put(lock)
 
-    def retrieve ( self , uuid ) :
+    def get ( self , uuid ) :
 
         fname = os.path.join( self.dbenv , uuid )
 

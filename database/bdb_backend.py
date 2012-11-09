@@ -36,7 +36,7 @@ class Database ( baseclass.Database ) :
         self.dbenv.lock_put(lock)
 
 
-    def add_record ( self , uuid , dbvalues ) :
+    def put ( self , uuid , dbvalues ) :
 
         db = bsddb.db.DB( self.dbenv )
         db.open( self.dbname , dbtype=bsddb.db.DB_HASH , flags=bsddb.db.DB_CREATE , mode=0600 )
@@ -52,7 +52,7 @@ class Database ( baseclass.Database ) :
         db.close()
         self.lock_put(lock)
 
-    def retrieve ( self , uuid ) :
+    def get ( self , uuid ) :
 
         db = bsddb.db.DB( self.dbenv )
         db.open( self.dbname , dbtype=bsddb.db.DB_HASH , flags=bsddb.db.DB_RDONLY )
