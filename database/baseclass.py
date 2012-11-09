@@ -70,12 +70,13 @@ class Database :
 
     def add_user ( self , uuid , kwargs=None ) :
 
-        dbvalues = { 'type':"user" ,
-                     'registration_date':time.mktime(time.gmtime())
-                     }
+        dbvalues = {}
 
         if kwargs :
             dbvalues.update( kwargs )
+
+        dbvalues['type'] = "user"
+        dbvalues['registration_date'] = time.mktime(time.gmtime())
 
         field_names = ( "password" ,
                         "group" ,
