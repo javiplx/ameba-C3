@@ -47,16 +47,20 @@ def handler ( req ) :
 
     error_msg = []
 
+    db = database.get( database.dbtype )
+
     if args['UUID'] == "__REQUEST__" :
-        if not uuid :
-            # NOTE : this is actually a protocol mismatch ??
-            msg = "uuid module not available to fulfill __REQUEST__ petition from %s" % args['HOSTNAME']
-            req.log_error( "register handler : %s" % msg , apache.APLOG_CRIT )
-            return send_error( req , "UUID cannot be generated" )
-        args['UUID'] = "%s" % uuid.uuid4()
+        try :
+            args['UUID'] = db.get_uuid( args['HOSTNAME'] )
+        except database.KeyNotFound , ex :
+            if not uuid :
+                # NOTE : this is actually a protocol mismatch ??
+                msg = "uuid module not available to fulfill __REQUEST__ petition from %s" % args['HOSTNAME']
+                req.log_error( "register handler : %s" % msg , apache.APLOG_CRIT )
+                return send_error( req , "UUID cannot be generated" )
+            args['UUID'] = "%s" % uuid.uuid4()
         error_msg.append( "UUID %s" % args['UUID'] )
 
-    db = database.get( database.dbtype )
     try :
         dbvalues = db.add_node( args , req )
         callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )

@@ -64,3 +64,16 @@ class Database ( baseclass.Database ) :
 
         return record
 
+    def get_uuid ( self , name ) :
+
+        for filename in os.listdir( self.dbenv ) :
+            fd = open( os.path.join( self.dbenv , filename ) )
+            record = self.deserialize( "".join( fd.readlines() )[:-1] )
+            fd.close()
+            if not record.has_key( 'uuid' ) :
+                record['uuid'] = filename
+            if record.get( 'hostname' ) == name :
+                return record['uuid']
+
+        raise exceptions.KeyNotFound( uuid )
+

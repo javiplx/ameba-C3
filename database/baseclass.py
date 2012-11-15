@@ -51,6 +51,10 @@ class Database :
         return None
 
 
+    def get_uuid ( self , name ) :
+        raise InternalError( "Unimplemented abstract method" )
+
+
     # This block corresponds only to simple-sting based storages (file, bdb, ...)
 
     fieldsep = '&'
