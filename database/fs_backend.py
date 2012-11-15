@@ -36,14 +36,17 @@ class Database ( baseclass.Database ) :
         os.unlink( lock )
 
 
-    def put ( self , uuid , dbvalues ) :
+    def put ( self , uuid , dbvalues , update=False ) :
 
         lock = self.lock_get( uuid , 1 )
         fname = os.path.join( self.dbenv , uuid )
 
         if os.path.exists( fname ) :
-            self.lock_put(lock)
-            raise exceptions.KeyExists( uuid )
+            if update :
+                os.unlink( fname )
+            else :
+                self.lock_put(lock)
+                raise exceptions.KeyExists( uuid )
 
         fd = open( fname , 'w' )
         fd.write( self.serialize( dbvalues ) )

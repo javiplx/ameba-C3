@@ -22,20 +22,20 @@ class Database :
         raise InternalError( "Unimplemented abstract method" )
 
 
-    def put ( self , uuid , dbvalues ) :
+    def put ( self , uuid , dbvalues , update=False ) :
         raise InternalError( "Unimplemented abstract method" )
 
     def get ( self , uuid ) :
         raise InternalError( "Unimplemented abstract method" )
 
 
-    def add_record ( self , uuid , dbvalues , field_names ) :
+    def add_record ( self , uuid , dbvalues , field_names , update=False ) :
 
         for key in dbvalues :
             if key not in field_names + self.field_names :
                 raise UnknownField( key )
 
-        self.put( uuid , dbvalues )
+        self.put( uuid , dbvalues , update )
 
         return dbvalues
 
@@ -157,6 +157,35 @@ class Database :
                         )
 
         self.add_record( uuid , dbvalues , field_names )
+
+        return dbvalues
+
+    def update_node ( self , args , req=None ) :
+
+        dbvalues = self.get_node( args['UUID'] )
+
+        dbvalues[ "distro" ] = args['DISTRO']
+        dbvalues[ "hostname" ] = args['HOSTNAME']
+
+        if args.has_key( 'METRICS' ) :
+            dbvalues[ "metrics" ] = args['METRICS']
+
+        if args.has_key( 'SERVICES' ) :
+            dbvalues[ "services" ] = args['SERVICES']
+
+        if req :
+            dbvalues[ "hostaddress" ] = req.get_remote_host()
+            dbvalues[ "update_date" ] = req.request_time
+
+        field_names = ( "distro" ,
+                        "channels" ,
+                        "metrics" ,
+                        "services" ,
+                        "hostname" ,
+                        "hostaddress"
+                        )
+
+        self.add_record( uuid , dbvalues , field_names , True )
 
         return dbvalues
 
