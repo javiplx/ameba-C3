@@ -75,6 +75,9 @@ if [ "$1" = "0" ] ; then
 %attr(0755,root,root) /etc/init.d/ameba-updater
 
 %{python_site}/%{name}
+%if %{dist} == el6
+%{python_site}/%{name}-%{version}-py%{python_version}.egg-info
+%endif
 
 %{_defaultdocdir}/%{name}/externals
 %{_defaultdocdir}/%{name}/samples
