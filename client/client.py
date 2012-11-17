@@ -42,9 +42,10 @@ def register ( url , data ) :
                 response = secondline.split()
                 if len(response) == 2 and response[0] == "UUID" :
                     ret = response[1]
+                    map( logger.warning , res.readlines() )
                 else :
                     logger.error( secondline )
-                map( logger.warning , res.readlines() )
+                    map( logger.error , res.readlines() )
         else :
             logger.error( firstline )
             map( logger.error , res.readlines() )
@@ -72,7 +73,7 @@ def login ( url , uuid ) :
             delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
         elif firstline :
             # NOTE : login warnings could appear mixed with errors on combined operations
-            logger.error( firstline )
+            logger.error( " ".join(firstline) )
             map( logger.error , res.readlines() )
 
     return sessid , delay
@@ -102,7 +103,7 @@ def logout ( url , sessid , failed=False ) :
         else :
             logger.error( "Logout failed" )
             if firstline :
-                logger.error( firstline )
+                logger.error( " ".join(firstline) )
                 map( logger.error , res.readlines() )
 
     return ret
