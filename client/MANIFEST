@@ -12,3 +12,6 @@ ameba-updater
 ameba-updater.sh
 externals/15ameba-updater
 externals/ameba-updater.py
+debian/changelog
+debian/control
+debian/rules

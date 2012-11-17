@@ -2,8 +2,8 @@
 
 Summary: AmebaC3 update agent
 Name: amebaC3_client
-Version: 1.4
-Release: 5%{dist}
+Version: 1.4.1
+Release: 1%{dist}
 Source: %{name}-%{version}.tar.gz
 License: GPLv2
 Group: System/Management
@@ -30,7 +30,7 @@ python setup.py install --root %{buildroot}
 
 mkdir -p %{buildroot}/etc
 cat <<EOF > %{buildroot}/etc/aupd.conf
-[yum-pull]
+[pull]
 check-only = 1
 check_cmds = yum check-update
 outdated_retcode = 100
@@ -75,10 +75,13 @@ if [ "$1" = "0" ] ; then
 %attr(0755,root,root) /etc/init.d/ameba-updater
 
 %{python_site}/%{name}
-%if %{dist} == el6
+%if "%{dist}" == "el6"
 %{python_site}/%{name}-%{version}-py%{python_version}.egg-info
 %endif
 
 %{_defaultdocdir}/%{name}/externals
 %{_defaultdocdir}/%{name}/samples
 
+%changelog
+* Sat Nov 17 2012 Javier Palacios <javiplx@gmail.com>
+- Fixed some errors in response handling

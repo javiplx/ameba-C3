@@ -1,3 +1,9 @@
+amebac3-client (1.4.1-1) stable; urgency=low
+
+  * Fixed some errors in response handling
+
+ -- Javier Palacios <javiplx@gmail.com>  Sat, 17 Nov 2012 11:51:43 +0100
+
 amebac3-client (1.4-1) stable; urgency=low
 
   * Released 1.4 version
