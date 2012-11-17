@@ -34,10 +34,10 @@ def register ( url , data ) :
         logger.error( res.msg )
         map( logger.error , res.readlines() )
     else :
-        firstline = res.readline()
+        firstline = res.readline().rstrip('\n')
         if firstline == "OK" :
             ret = True
-            secondline = res.readline()
+            secondline = res.readline().rstrip('\n')
             if secondline :
                 response = secondline.split()
                 if len(response) == 2 and response[0] == "UUID" :
@@ -66,7 +66,7 @@ def login ( url , uuid ) :
         logger.error( res.msg )
         map( logger.error , res.readlines() )
     else :
-        firstline = res.readline().split()
+        firstline = res.readline().rstrip('\n').split()
         if len(firstline) == 2 and firstline[0] == "ID" :
             sessid = firstline[1]
             delay = float( res.headers.get( 'X-AmebaDelay' , "0" ) )
@@ -96,7 +96,7 @@ def logout ( url , sessid , failed=False ) :
         logger.error( res.msg )
         map( logger.error , res.readlines() )
     else :
-        firstline = res.readline().split()
+        firstline = res.readline().rstrip('\n').split()
         if len(firstline) == 2 and firstline[0] == "ID" :
             ret = True
         else :
