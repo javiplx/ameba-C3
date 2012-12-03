@@ -160,29 +160,33 @@ class Database :
 
         return dbvalues
 
-    def update_node ( self , args , req=None ) :
-
-        dbvalues = self.get_node( args['UUID'] )
+    def update_node ( self , dbvalues , args , req=None ) :
 
         dbvalues[ "distro" ] = args['DISTRO']
         dbvalues[ "hostname" ] = args['HOSTNAME']
+        dbvalues[ "modification_date" ] = time.mktime(time.gmtime())
 
         if args.has_key( 'METRICS' ) :
-            dbvalues[ "metrics" ] = args['METRICS']
+            metrics = dict.fromkeys( dbvalues[ "metrics" ].split(',') )
+            metrics.update( dict.fromkeys( args['METRICS'].split(',') ) )
+            dbvalues[ "metrics" ] = ",".join( metrics.key() )
 
         if args.has_key( 'SERVICES' ) :
-            dbvalues[ "services" ] = args['SERVICES']
+            services = dict.fromkeys( dbvalues[ "services" ] )
+            services.update( dict.fromkeys( args['SERVICES'] ) )
+            dbvalues[ "services" ] = ",".join( services.key() )
 
         if req :
             dbvalues[ "hostaddress" ] = req.get_remote_host()
-            dbvalues[ "update_date" ] = req.request_time
+            dbvalues[ "modification_date" ] = req.request_time
 
         field_names = ( "distro" ,
                         "channels" ,
                         "metrics" ,
                         "services" ,
                         "hostname" ,
-                        "hostaddress"
+                        "hostaddress" ,
+                        "modification_date"
                         )
 
         self.add_record( uuid , dbvalues , field_names , True )
