@@ -70,6 +70,11 @@ def handler ( req ) :
             # FIXME : Implement update record code
             error_msg.append( "System already registered" )
             map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_INFO ) , error_msg )
+            try :
+                db.update_node( dbvalues , args , req )
+                callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )
+            except Exception , ex :
+                error_msg.append( "Exception while updating record : %s" % ex )
         else :
             error_msg.append( "UUID owned by '%s'" % dbvalues['hostname'] )
             map( lambda x : req.log_error( "register handler : %s" % x ) , error_msg )
