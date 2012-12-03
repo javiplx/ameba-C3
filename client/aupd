@@ -177,6 +177,20 @@ def register ( config , options , args ) :
                 config.set( 'global' , 'uuid' , ret )
             else :
                 config.set( 'global' , 'uuid' , _uuid )
+            if options.metrics :
+                if config.has_option( 'global' , 'metrics' ) :
+                    metriclist = config.get( 'global' , 'metrics' )
+                    metrics = dict.fromkeys( metriclist.split(',') )
+                    metrics.update( dict.fromkeys( options.metrics.split(',') ) )
+                    options.metrics = ",".join( metrics )
+                config.set( 'global' , 'metrics' , options.metrics )
+            if options.services :
+                if config.has_option( 'global' , 'services' ) :
+                    servlist = config.get( 'global' , 'services' )
+                    services = dict.fromkeys( servlist.split(',') )
+                    services.update( dict.fromkeys( options.services.split(',') ) )
+                    options.services = ",".join( services )
+                config.set( 'global' , 'services' , options.services )
             store_config( config )
 
     return True
