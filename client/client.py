@@ -32,7 +32,7 @@ def register ( url , data ) :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
         logger.error( res.msg )
-        map( logger.error , res.readlines() )
+        map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
     else :
         firstline = res.readline().rstrip('\n')
         if firstline == "OK" :
@@ -42,13 +42,13 @@ def register ( url , data ) :
                 response = secondline.split()
                 if len(response) == 2 and response[0] == "UUID" :
                     ret = response[1]
-                    map( logger.warning , res.readlines() )
+                    map( logger.warning , map( lambda x : x.rstrip('\n') , res.readlines() ) )
                 else :
                     logger.error( secondline )
-                    map( logger.error , res.readlines() )
+                    map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
         else :
             logger.error( firstline )
-            map( logger.error , res.readlines() )
+            map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
 
     return ret
 
@@ -65,7 +65,7 @@ def login ( url , uuid ) :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
         logger.error( res.msg )
-        map( logger.error , res.readlines() )
+        map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
     else :
         firstline = res.readline().rstrip('\n').split()
         if len(firstline) == 2 and firstline[0] == "ID" :
@@ -74,7 +74,7 @@ def login ( url , uuid ) :
         elif firstline :
             # NOTE : login warnings could appear mixed with errors on combined operations
             logger.error( " ".join(firstline) )
-            map( logger.error , res.readlines() )
+            map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
 
     return sessid , delay
 
@@ -95,7 +95,7 @@ def logout ( url , sessid , failed=False ) :
         res = urllib2.urlopen( req )
     except urllib2.HTTPError , res :
         logger.error( res.msg )
-        map( logger.error , res.readlines() )
+        map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
     else :
         firstline = res.readline().rstrip('\n').split()
         if len(firstline) == 2 and firstline[0] == "ID" :
@@ -104,7 +104,7 @@ def logout ( url , sessid , failed=False ) :
             logger.error( "Logout failed" )
             if firstline :
                 logger.error( " ".join(firstline) )
-                map( logger.error , res.readlines() )
+                map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
 
     return ret
 
