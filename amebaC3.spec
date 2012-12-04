@@ -57,8 +57,8 @@ rm -rf %{buildroot}
 
 %config /etc/httpd/conf.d/amebaC3.conf
 
-%dir /etc/nagios/amebaC3
-%config /etc/nagios/amebaC3/amebaC3_templates.cfg
+%attr(0755,apache,apache) %dir /etc/nagios/amebaC3
+%attr(0644,apache,apache) %config /etc/nagios/amebaC3/amebaC3_templates.cfg
 
 %{python_site}/%{name}
 %if "%{dist}" == ".el6"
