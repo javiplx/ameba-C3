@@ -5,6 +5,7 @@ Name: amebaC3
 Version: 1.0.99
 Release: 1%{dist}
 Source: %{name}-%{version}.tar.gz
+Patch: rhel62.patch
 License: GPLv2
 Group: System/Management
 
@@ -21,6 +22,10 @@ Requires: mod_python , nagios , nagios-plugins
 %prep
 
 %setup -q -n %{name}-1.1
+%if "%{dist}" == ".el6"
+%patch -p1
+%endif
+
 
 %build
 
@@ -56,6 +61,9 @@ rm -rf %{buildroot}
 %config /etc/nagios/amebaC3/amebaC3_templates.cfg
 
 %{python_site}/%{name}
+%if "%{dist}" == ".el6"
+%{python_site}/%{name}-%{version}-py%{python_version}.egg-info
+%endif
 
 %attr(0755,root,root) /usr/lib/nagios/plugins/ameba_freshness_exceeded.sh
 
