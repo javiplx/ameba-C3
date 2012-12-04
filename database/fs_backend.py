@@ -78,5 +78,5 @@ class Database ( baseclass.Database ) :
             if record.get( 'hostname' ) == name :
                 return record['uuid']
 
-        raise exceptions.KeyNotFound( uuid )
+        raise exceptions.KeyNotFound( name )
 
