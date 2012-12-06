@@ -14,35 +14,19 @@
 import __baseclass
 callback_name = "stats-collector"
 
+from rrdutils import confdir , getHosts
 import os , sys
-
-# Take values from configuration file
-rootdir = "/var/lib/rrd"
-confdir = os.path.join( rootdir , "conf" )
-
+import re
 
 def getConf ( conf , mode='r') :
-    lead = "H"
     if conf.find(".") != -1 :
         conf , tag = conf.split(".",1)
-        lead += tag
+    else :
+       tag = ""
     filename = os.path.join( confdir , conf )
     if not os.path.isfile( filename ) :
-        return None , "%s " % lead
-    return open( filename , mode ) , "%s " % lead
-
-def getHosts ( conf ) :
-    cfg , lead = getConf( conf )
-    if cfg is None :
-        return None
-    hosts = []
-    line = cfg.readline()
-    while line :
-        if line.startswith(lead) :
-            hosts.extend( line[len(lead):].split() )
-        line = cfg.readline()
-    cfg.close()
-    return hosts
+        return False , None
+    return tag , open( filename , mode )
 
 
 class StatsCollectorAddHost ( __baseclass.AbstractRegisterCallback ) :
@@ -56,14 +40,17 @@ class StatsCollectorAddHost ( __baseclass.AbstractRegisterCallback ) :
 
         hostname = dbvalues["hostname"]
 
+        # FIXME : add errors to continues
         for metric in dbvalues['metrics'].split(',') :
             host_list = getHosts( metric )
-            if host_list is None or hostname in host_list :
+            if not host_list or hostname in host_list :
                 continue
             outlines =  []
             unprocessed = True
             insertline , last_host = 0 , 0
-            cfg , lead = getConf( metric , 'r+' )
+            tagname , cfg = getConf( metric , 'r+' )
+            if tagname is False :
+                continue
             line = cfg.readline()
             while line :
                 if not insertline and ( line.startswith("P") or line.startswith("DefGraph") ) :
@@ -72,18 +59,19 @@ class StatsCollectorAddHost ( __baseclass.AbstractRegisterCallback ) :
                 # FIXME : this will produce lengthy files, some more intelligent reorganization is required
                 if line.startswith("H") :
                   last_host = len(outlines)
-                if line.startswith(lead) and unprocessed :
-                    outlines.append( "%s%s\n" % ( lead , hostname ) )
+                match = re.match( "H%s\s+" % tagname , line )
+                if match and unprocessed :
+                    outlines.append( "H%s %s\n" % ( tagname , hostname ) )
                     unprocessed = False
                 line = cfg.readline()
             # We must care about rare cases where this is the first host ??
             if unprocessed :
               if last_host :
                 # FIXME : this could fail when conf ends with a host definition
-                outlines.insert( last_host , "%s%s\n\n" % ( lead , hostname ) )
+                outlines.insert( last_host , "H%s %s\n\n" % ( tagname , hostname ) )
               else :
                 # FIXME : this way to insert point might (unlikely) not handle empty files
-                outlines.insert( insertline , "%s%s\n\n" % ( lead , hostname ) )
+                outlines.insert( insertline , "H%s %s\n\n" % ( tagname , hostname ) )
             cfg.seek(0)
             for line in outlines :
                 cfg.write( line )
