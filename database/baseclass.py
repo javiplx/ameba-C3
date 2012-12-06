@@ -160,32 +160,46 @@ class Database :
 
         return dbvalues
 
-    def update_node ( self , args , req=None ) :
-
-        dbvalues = self.get_node( args['UUID'] )
+    def update_node ( self , dbvalues , args , req=None ) :
 
         dbvalues[ "distro" ] = args['DISTRO']
         dbvalues[ "hostname" ] = args['HOSTNAME']
+        dbvalues[ "modification_date" ] = time.mktime(time.gmtime())
 
         if args.has_key( 'METRICS' ) :
-            dbvalues[ "metrics" ] = args['METRICS']
+            metrics = {}
+            if dbvalues.has_key( "metrics" ) :
+                metriclist = "%s," % dbvalues['metrics']
+                metrics.update( dict.fromkeys( metriclist.split(',') ) )
+            metriclist = "%s," % args['METRICS']
+            metrics.update( dict.fromkeys( metriclist.split(',') ) )
+            del metrics['']
+            dbvalues[ "metrics" ] = ",".join( metrics.keys() )
 
         if args.has_key( 'SERVICES' ) :
-            dbvalues[ "services" ] = args['SERVICES']
+            services = {}
+            if dbvalues.has_key( "services" ) :
+                servlist = "%s," % dbvalues['services']
+                services.update( dict.fromkeys( servlist.split(',') ) )
+            servlist = "%s," % args['SERVICES']
+            services.update( dict.fromkeys( servlist.split(',') ) )
+            del services['']
+            dbvalues[ "services" ] = ",".join( services.keys() )
 
         if req :
             dbvalues[ "hostaddress" ] = req.get_remote_host()
-            dbvalues[ "update_date" ] = req.request_time
+            dbvalues[ "modification_date" ] = req.request_time
 
         field_names = ( "distro" ,
                         "channels" ,
                         "metrics" ,
                         "services" ,
                         "hostname" ,
-                        "hostaddress"
+                        "hostaddress" ,
+                        "modification_date"
                         )
 
-        self.add_record( uuid , dbvalues , field_names , True )
+        self.add_record( args['UUID'] , dbvalues , field_names , True )
 
         return dbvalues
 

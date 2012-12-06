@@ -102,6 +102,8 @@ def register ( config , options , args ) :
         uuid_location = "command line"
         options.store = True
 
+    reregister = False
+
     if config.has_option( 'global' , 'uuid' ) :
         if _uuid :
             if _uuid != config.get( 'global' , 'uuid' ) :
@@ -127,8 +129,7 @@ def register ( config , options , args ) :
         options.store = True
     elif options.requestuuid :
         if _uuid :
-            logger.error( "Requesting UUID from server while value given on %s" % uuid_location )
-            return False
+            reregister = _uuid
         _uuid = "__REQUEST__"
         options.store = True
 
@@ -158,6 +159,9 @@ def register ( config , options , args ) :
 
     data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
 
+    if reregister :
+        data['OLDUUID'] = reregister
+
     if options.metrics :
         data['METRICS'] = options.metrics
 
@@ -177,6 +181,24 @@ def register ( config , options , args ) :
                 config.set( 'global' , 'uuid' , ret )
             else :
                 config.set( 'global' , 'uuid' , _uuid )
+            if options.metrics :
+                if config.has_option( 'global' , 'metrics' ) :
+                    metriclist = "%s," % config.get( 'global' , 'metrics' )
+                    metrics = dict.fromkeys( metriclist.split(',') )
+                    metriclist = "%s," % options.metrics
+                    metrics.update( dict.fromkeys( metriclist.split(',') ) )
+                    del metrics['']
+                    options.metrics = ",".join( metrics.keys() )
+                config.set( 'global' , 'metrics' , options.metrics )
+            if options.services :
+                if config.has_option( 'global' , 'services' ) :
+                    servlist = "%s," % config.get( 'global' , 'services' )
+                    services = dict.fromkeys( servlist.split(',') )
+                    servlist = "%s," % options.services
+                    services.update( dict.fromkeys( servlist.split(',') ) )
+                    del services['']
+                    options.services = ",".join( services.keys() )
+                config.set( 'global' , 'services' , options.services )
             store_config( config )
 
     return True
