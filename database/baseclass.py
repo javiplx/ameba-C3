@@ -167,13 +167,23 @@ class Database :
         dbvalues[ "modification_date" ] = time.mktime(time.gmtime())
 
         if args.has_key( 'METRICS' ) :
-            metrics = dict.fromkeys( dbvalues.get( "metrics" , "" ).split(',') )
-            metrics.update( dict.fromkeys( args['METRICS'].split(',') ) )
+            metrics = {}
+            if dbvalues.has_key( "metrics" ) :
+                metriclist = "%s," % dbvalues['metrics']
+                metrics.update( dict.fromkeys( metriclist.split(',') ) )
+            metriclist = "%s," % args['METRICS']
+            metrics.update( dict.fromkeys( metriclist.split(',') ) )
+            del metrics['']
             dbvalues[ "metrics" ] = ",".join( metrics.keys() )
 
         if args.has_key( 'SERVICES' ) :
-            services = dict.fromkeys( dbvalues.get( "services" , "" ).split(',') )
-            services.update( dict.fromkeys( args['SERVICES'].split(',') ) )
+            services = {}
+            if dbvalues.has_key( "services" ) :
+                servlist = "%s," % dbvalues['services']
+                services.update( dict.fromkeys( servlist.split(',') ) )
+            servlist = "%s," % args['SERVICES']
+            services.update( dict.fromkeys( servlist.split(',') ) )
+            del services['']
             dbvalues[ "services" ] = ",".join( services.keys() )
 
         if req :
@@ -189,7 +199,7 @@ class Database :
                         "modification_date"
                         )
 
-        self.add_record( uuid , dbvalues , field_names , True )
+        self.add_record( args['UUID'] , dbvalues , field_names , True )
 
         return dbvalues
 
