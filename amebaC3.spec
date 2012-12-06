@@ -12,7 +12,9 @@ Group: System/Management
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-root
 
-Requires: mod_python , nagios , nagios-plugins
+Requires: mod_python
+Requires: nagios , nagios-plugins
+Requires: rrdUtils >= 5.5
 
 %description
 
