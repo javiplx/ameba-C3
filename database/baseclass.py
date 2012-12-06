@@ -167,14 +167,14 @@ class Database :
         dbvalues[ "modification_date" ] = time.mktime(time.gmtime())
 
         if args.has_key( 'METRICS' ) :
-            metrics = dict.fromkeys( dbvalues[ "metrics" ].split(',') )
+            metrics = dict.fromkeys( dbvalues.get( "metrics" , "" ).split(',') )
             metrics.update( dict.fromkeys( args['METRICS'].split(',') ) )
-            dbvalues[ "metrics" ] = ",".join( metrics.key() )
+            dbvalues[ "metrics" ] = ",".join( metrics.keys() )
 
         if args.has_key( 'SERVICES' ) :
-            services = dict.fromkeys( dbvalues[ "services" ] )
-            services.update( dict.fromkeys( args['SERVICES'] ) )
-            dbvalues[ "services" ] = ",".join( services.key() )
+            services = dict.fromkeys( dbvalues.get( "services" , "" ).split(',') )
+            services.update( dict.fromkeys( args['SERVICES'].split(',') ) )
+            dbvalues[ "services" ] = ",".join( services.keys() )
 
         if req :
             dbvalues[ "hostaddress" ] = req.get_remote_host()
