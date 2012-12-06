@@ -13,7 +13,7 @@ BuildRoot: %{_tmppath}/%{name}-root
 
 Requires: mod_python
 Requires: nagios , nagios-plugins
-Requires: rrdUtil >= 5.4
+Requires: rrdUtils >= 5.5
 
 %description
 
