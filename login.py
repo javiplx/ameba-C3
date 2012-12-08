@@ -94,6 +94,12 @@ def authenhandler ( req ) :
             return apache.DONE
 
 
+    run_update = False
+    if req.path_info == "/logoff" :
+        run_update = True
+    elif os.path.split( req.parsed_uri[apache.URI_PATH] )[1] == "logoff" :
+        run_update = True
+
     sess = Session.Session( req )
     req.subprocess_env['sessid'] = sess.id()
     if sess.is_new() :
@@ -126,7 +132,7 @@ def authenhandler ( req ) :
             nagios.nodealive( sess )
         else :
             req.user = sess['UUID']
-            if req.path_info == "/logoff" :
+            if run_update :
                 callbacks.run_stage( "update" , req , ( sess , req.headers_in.get( "X-AmebaStatus" , "OK" ) ) )
                 sess.invalidate()
                 req.log_error( "authenhandler : user '%s' ended session %s" % ( req.user , req.subprocess_env['sessid'] ) , apache.APLOG_INFO )
