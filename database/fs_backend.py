@@ -70,6 +70,7 @@ class Database ( baseclass.Database ) :
     def get_uuid ( self , name ) :
 
         for filename in os.listdir( self.dbenv ) :
+          try :
             fd = open( os.path.join( self.dbenv , filename ) )
             record = self.deserialize( "".join( fd.readlines() )[:-1] )
             fd.close()
@@ -77,6 +78,8 @@ class Database ( baseclass.Database ) :
                 record['uuid'] = filename
             if record.get( 'hostname' ) == name :
                 return record['uuid']
+          except :
+            pass
 
         raise exceptions.KeyNotFound( name )
 
