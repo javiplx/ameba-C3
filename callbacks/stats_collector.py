@@ -14,7 +14,7 @@
 import __baseclass
 callback_name = "stats-collector"
 
-from rrdutils import confdir , getHosts
+from rrdutils import confdir , getHosts , rrdCreate
 import os , sys
 import re
 
