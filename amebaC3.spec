@@ -64,7 +64,7 @@ rm -rf %{buildroot}
 
 %{python_site}/%{name}
 %if "%{dist}" == ".el6"
-%{python_site}/%{name}-%{version}-py%{python_version}.egg-info
+%{python_site}/%{name}-1.1-py%{python_version}.egg-info
 %endif
 
 %attr(0755,root,root) /usr/lib/nagios/plugins/ameba_freshness_exceeded.sh
