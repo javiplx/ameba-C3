@@ -157,7 +157,7 @@ def register ( config , options , args ) :
         return False
 
 
-    data = { 'UUID':_uuid , 'HOSTNAME':socket.gethostname() , 'DISTRO':_distro }
+    data = { 'UUID':_uuid , 'HOSTNAME':socket.getfqdn() , 'DISTRO':_distro }
 
     if reregister :
         data['OLDUUID'] = reregister
