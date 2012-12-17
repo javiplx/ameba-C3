@@ -12,33 +12,30 @@ import ConfigParser
 
 configfile = "/etc/amebaC3.conf"
 
-config = ConfigParser.RawConfigParser()
+dbvalues = {
+    'dbroot': "/var/lib/amebaC3" ,
+    'dbname': "amebaC3-fs" ,
+    'dbtype': "fs"
+    }
+
+config = ConfigParser.RawConfigParser( dbvalues )
 config.read( configfile )
 
-# NOTE : Write this as ConfigParser defaults ???
-dbroot = "/var/lib/amebaC3"
-dbname = "amebaC3"
-dbtype = "fs"
-
-if config.has_option( 'database' , 'dbroot' ) :
-    dbroot = config.get( 'database' , 'dbroot' )
-if config.has_option( 'database' , 'dbname' ) :
-    dbname = config.get( 'database' , 'dbname' )
-if config.has_option( 'database' , 'dbtype' ) :
-    dbtype = config.get( 'database' , 'dbtype' )
+if config.has_section( 'database' ) :
+    dbvalues = config.items( 'database' )
 
 
 def get ( _type ) :
 
-    if not os.path.isdir( dbroot ) :
+    if not os.path.isdir( dbvalues['dbroot'] ) :
         raise InternalError( "Directory %s does not exists" % dbroot )
 
     #FIXME : Check for owner and permissions
 
     if _type == "fs" :
-        return fs_backend.Database( dbroot , dbname )
+        return fs_backend.Database( dbvalues['dbroot'] , dbvalues['dbname'] )
     elif _type == "bdb" :
-        return bdb_backend.Database( dbroot , dbname )
+        return bdb_backend.Database( dbvalues['dbroot'] , dbvalues['dbname'] )
 
     raise InternalError( "Uknown database type '%s'" % _type )
 
