@@ -1,0 +1,15 @@
+--- ameba-C3/callbacks/amebaC3_templates.cfg	2012-12-17 23:47:17.000000000 +0100
++++ ameba-C3/callbacks/amebaC3_templates.cfg	2012-12-17 23:47:33.000000000 +0100
+@@ -4,10 +4,10 @@
+         alias                           AmebaC3 Admin
+         host_notification_period        24x7
+         host_notification_options       d,r
+-        host_notification_commands      host-notify-by-email
++        host_notification_commands      notify-host-by-email
+         service_notification_period     24x7
+         service_notification_options    w,u,c,r
+-        service_notification_commands   notify-by-email
++        service_notification_commands   notify-service-by-email
+         email                           root@localhost
+         }
+ 
