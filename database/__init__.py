@@ -7,37 +7,39 @@ import fs_backend , bdb_backend
 import time
 import os
 
-
 import ConfigParser
+
 
 configfile = "/etc/amebaC3.conf"
 
-dbvalues = {
-    'dbroot': "/var/lib/amebaC3" ,
-    'dbname': "amebaC3-fs" ,
-    'dbtype': "fs"
-    }
 
-config = ConfigParser.RawConfigParser( dbvalues )
-config.read( configfile )
+def get ( cfgfile=configfile ) :
 
-if config.has_section( 'database' ) :
-    dbvalues = dict( config.items( 'database' ) )
+    dbconfig = {
+        'root': "/var/lib/amebaC3" ,
+        'name': "amebaC3-fs"
+        }
 
+    config = ConfigParser.RawConfigParser( dbconfig )
+    config.read( cfgfile )
 
-def get ( _type ) :
+    if config.has_section( 'database' ) :
+        dbconfig.update( dict( config.items( 'database' ) ) )
 
-    if not os.path.isdir( dbvalues['dbroot'] ) :
-        raise InternalError( "Directory %s does not exists" % dbroot )
+    if not dbconfig.has_key( 'type' ) :
+        raise InternalError( "No database type configured" )
+
+    if not os.path.isdir( dbconfig['root'] ) :
+        raise InternalError( "Directory %s does not exists" % dbconfig['root'] )
 
     #FIXME : Check for owner and permissions
 
-    if _type == "fs" :
-        return fs_backend.Database( dbvalues['dbroot'] , dbvalues['dbname'] )
-    elif _type == "bdb" :
-        return bdb_backend.Database( dbvalues['dbroot'] , dbvalues['dbname'] )
+    if dbconfig['type'] == "fs" :
+        return fs_backend.Database( dbconfig['root'] , dbconfig['name'] )
+    elif dbconfig['type'] == "bdb" :
+        return bdb_backend.Database( dbconfig['root'] , dbconfig['name'] )
 
-    raise InternalError( "Uknown database type '%s'" % _type )
+    raise InternalError( "Uknown database type '%s'" % dbconfig['type'] )
 
 
 def initialize ( db ) :

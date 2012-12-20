@@ -1,6 +1,6 @@
 
 - Install the modules
-- Create dbroot with proper permisions
+- Create database root with proper permisions
 - Configure register location
 
 Optional: (actualy not so much)
