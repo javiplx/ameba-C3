@@ -52,7 +52,7 @@ for type in dbtypes :
         db.close()
 
     except database.C3DBException , ex :
-        print "Ameba DB Exception: %s" % ex.message
+        print "Ameba DB Exception: %s" % ex
     except Exception , ex :
         print "Exception : %s" % ex
 
