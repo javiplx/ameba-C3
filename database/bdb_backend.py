@@ -36,11 +36,14 @@ class Database ( baseclass.Database ) :
         self.dbenv.lock_put(lock)
 
 
-    def put ( self , uuid , dbvalues ) :
+    def put ( self , uuid , dbvalues , update=False ) :
 
         db = bsddb.db.DB( self.dbenv )
         db.open( self.dbname , dbtype=bsddb.db.DB_HASH , flags=bsddb.db.DB_CREATE , mode=0600 )
         lock = self.lock_get( uuid , bsddb.db.DB_LOCK_NOWAIT )
+
+        if update :
+            raise Exception( "Update not implemented for Berkeley backend" )
 
         if db.has_key( uuid ) :
             db.close()
