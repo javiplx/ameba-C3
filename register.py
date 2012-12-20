@@ -47,7 +47,7 @@ def handler ( req ) :
 
     error_msg = []
 
-    db = database.get( database.dbtype )
+    db = database.get()
 
     if args['UUID'] == "__REQUEST__" :
         try :
