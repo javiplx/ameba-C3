@@ -23,7 +23,7 @@ dbtypes = sys.argv[1:]
 if not dbtypes :
     dbtypes = ( "fs" , "bdb" )
 
-database.dbroot = tempfile.mkdtemp()
+database.dbvalues['dbroot'] = tempfile.mkdtemp()
 
 for type in dbtypes :
     try :
@@ -56,5 +56,5 @@ for type in dbtypes :
     except Exception , ex :
         print "Exception : %s" % ex
 
-shutil.rmtree( database.dbroot )
+shutil.rmtree( database.dbvalues['dbroot'] )
 
