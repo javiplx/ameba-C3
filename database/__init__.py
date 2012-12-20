@@ -42,8 +42,8 @@ def get ( cfgfile=configfile ) :
     raise InternalError( "Uknown database type '%s'" % dbconfig['type'] )
 
 
-def initialize ( db ) :
-
+def initialize ( cfgfile ) :
+    db = get( cfgfile )
     db.add_user ( "nagiosadmin" , { 'registration_by':'__init__' , 'password':"nagiosadmin" , 'group':"nagiosadmin" } )
     db.add_user ( "guest" , { 'registration_by':'__init__' , 'password':"*" } )
 
