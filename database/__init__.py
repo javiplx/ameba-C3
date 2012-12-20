@@ -22,7 +22,7 @@ config = ConfigParser.RawConfigParser( dbvalues )
 config.read( configfile )
 
 if config.has_section( 'database' ) :
-    dbvalues = config.items( 'database' )
+    dbvalues = dict( config.items( 'database' ) )
 
 
 def get ( _type ) :
