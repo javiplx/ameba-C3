@@ -68,6 +68,10 @@ for path in __path__ :
 
 for modname in __all__ :
     module = __import__( modname , globals() )
+    if config.has_section( module.callback_name ) :
+        if not hasattr( module , 'config' ) :
+            module.config = {}
+        module.config.update( config.items( module.callback_name ) )
     for name in dir(module) :
         item = getattr( module , name )
         if type(item) == types.ClassType :
