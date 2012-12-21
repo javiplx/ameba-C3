@@ -43,7 +43,7 @@ def register ( item ) :
         raise Exception( "Unallowed callback type for %s" % item )
 
 
-def run_stage ( stage_name , request , arglist ) :
+def run_stage ( stage_name , arglist ) :
     messages = []
     if stage_name not in __callbacks__.keys() :
         raise Exception( "Unknown stage '%s'" % stage_name )

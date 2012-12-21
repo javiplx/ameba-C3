@@ -111,7 +111,7 @@ def authenhandler ( req ) :
             sess['DISTRO'] = node['distro']
             sess['CHANNELS'] = node.get( "channels" , "*" )
             sess.save()
-            callbacks.run_stage( "alive" , req , ( sess ,) )
+            callbacks.run_stage( "alive" , ( sess ,) )
         else :
             sess.invalidate()
             cookies = Cookie.get_cookies( req )
@@ -133,7 +133,7 @@ def authenhandler ( req ) :
         else :
             req.user = sess['UUID']
             if run_update :
-                callbacks.run_stage( "update" , req , ( sess , req.headers_in.get( "X-AmebaStatus" , "OK" ) ) )
+                callbacks.run_stage( "update" , ( sess , req.headers_in.get( "X-AmebaStatus" , "OK" ) ) )
                 sess.invalidate()
                 req.log_error( "authenhandler : user '%s' ended session %s" % ( req.user , req.subprocess_env['sessid'] ) , apache.APLOG_INFO )
             else :

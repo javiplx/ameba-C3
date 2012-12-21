@@ -63,7 +63,7 @@ def handler ( req ) :
 
     try :
         dbvalues = db.add_node( args , req )
-        messages = callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )
+        messages = callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
         if messages :
             error_msg.extend( messages )
             map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_WARNING ) , messages )
@@ -75,7 +75,7 @@ def handler ( req ) :
             map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_INFO ) , error_msg )
             try :
                 db.update_node( dbvalues , args , req )
-                messages = callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )
+                messages = callbacks.run_stage( "register" , ( args['UUID'] , dbvalues ) )
                 if messages :
                     error_msg.extend( messages )
                     map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_WARNING ) , messages )
