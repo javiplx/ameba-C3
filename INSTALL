@@ -3,12 +3,19 @@
 Copy the apache configuration in a proper location
 
 
-Create the db root directory, with permissions for apache user
+Create the db root directory, with permissions for apache user. Minimal
+required configuration is a database section on main configuration file,
+with keyword 'type' for the database backend (fs or bdb)
 
 
-Create the nagios directory, with permissions for apache user, and copy amebaC3_templates.cfg into it
-Add the directory to nagios configuration with a cfg_dir directive
-Copy ameba_freshness_exceeded.sh to plugins directory ($USER1)
+Create the nagios directory, with permissions for apache user. Add that
+directory to the nagios configuration file with a cfg_dir directive, and
+copy amebaC3_templates.cfg into it. Copy also the ameba_freshness_exceeded.sh
+script to the plugins directory ($USER1)
+If either the chosen directory for nagios configs or the nagios external
+commands file are not the standar ones, they must be included in the main
+configuration nagios section (keywords cfg_dir and commandfile)
+
 
 Set proper authentication to access nagios, and add required nagios users to database
 
