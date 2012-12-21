@@ -43,13 +43,28 @@ cp amebaC3_httpd_sample.conf %{buildroot}/etc/httpd/conf.d/amebaC3.conf
 mkdir -p %{buildroot}/etc/nagios/amebaC3
 cp callbacks/amebaC3_templates.cfg %{buildroot}/etc/nagios/amebaC3
 
-mkdir -p %{buildroot}/usr/lib/nagios/plugins
-cp callbacks/ameba_freshness_exceeded.sh %{buildroot}/usr/lib/nagios/plugins
+mkdir -p %{buildroot}%{_defaultdocdir}/%{name}
+cp callbacks/ameba_freshness_exceeded.sh %{buildroot}%{_defaultdocdir}/%{name}
 
 mkdir -p %{buildroot}/var/lib/amebaC3
 
 %clean
 rm -rf %{buildroot}
+
+%post
+
+PLUGINS_DIR=$( dirname `rpm -ql nagios-plugins | grep 'utils.sh$'` )
+
+if [ "$1" = "1" ] ; then
+  cp %{_defaultdocdir}/%{name}/ameba_freshness_exceeded.sh ${PLUGINS_DIR}
+  sed -i -e "s+%PLUGINS_DIR%+${PLUGINS_DIR}+" ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
+  fi
+
+%preun
+
+if [ "$1" = "0" ] ; then
+  rm -f ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
+  fi
 
 
 %files
@@ -67,6 +82,6 @@ rm -rf %{buildroot}
 %{python_site}/%{name}-1.1-py%{python_version}.egg-info
 %endif
 
-%attr(0755,root,root) /usr/lib/nagios/plugins/ameba_freshness_exceeded.sh
+%attr(0755,root,root) %{_defaultdocdir}/%{name}/ameba_freshness_exceeded.sh
 
 %dir %attr(0755,apache,apache) /var/lib/amebaC3

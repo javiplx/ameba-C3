@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /usr/lib/nagios/plugins/utils.sh
+. %PLUGINS_DIR%/utils.sh
 
 ${ECHO} "UNKNOWN - freshness threshold exceeded"
 
