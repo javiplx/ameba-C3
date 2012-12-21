@@ -19,15 +19,29 @@ sys.path.append( '..' )
 
 import database
 
-dbtypes = sys.argv[1:]
-if not dbtypes :
-    dbtypes = ( "fs" , "bdb" )
 
-database.dbroot = tempfile.mkdtemp()
+dbroot = False
 
-for type in dbtypes :
+cfg_template = """[database]
+type = %s
+root = %s
+name = amebaC3-test-%s"""
+
+
+configs = sys.argv[1:]
+if not configs :
+    dbroot = tempfile.mkdtemp()
+    for dbtype in ( "fs" , "bdb" ) :
+        filename = "%s/%s.cfg" % (  dbroot , dbtype )
+        fd = open( filename , 'w' )
+        fd.write( cfg_template % ( dbtype , dbroot , dbtype ) )
+        fd.close()
+        configs.append( filename )
+
+
+for cfg in configs :
     try :
-        db = database.get( type )
+        db = database.get( cfg )
         if db.add_user ( "admin" , { 'password':"admin" , 'group':"admin" , 'registration_by':'__init__' } ) :
             print "Added admin"
         if db.add_user ( "nagiosadmin" , { 'password':"nagiosadmin" , 'group':"admin" , 'registration_by':'__init__' } ) :
@@ -52,9 +66,10 @@ for type in dbtypes :
         db.close()
 
     except database.C3DBException , ex :
-        print "Ameba DB Exception: %s" % ex.message
+        print "Ameba DB Exception: %s" % ex
     except Exception , ex :
         print "Exception : %s" % ex
 
-shutil.rmtree( database.dbroot )
+if dbroot :
+    shutil.rmtree( dbroot )
 

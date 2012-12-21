@@ -37,6 +37,9 @@ python setup.py build
 
 python setup.py install --root %{buildroot}
 
+mkdir -p %{buildroot}/etc
+cp amebaC3_sample.conf %{buildroot}/etc/amebaC3.conf
+
 mkdir -p %{buildroot}/etc/httpd/conf.d
 cp amebaC3_httpd_sample.conf %{buildroot}/etc/httpd/conf.d/amebaC3.conf
 
@@ -72,6 +75,7 @@ if [ "$1" = "0" ] ; then
 %doc INSTALL license.txt
 %doc deployment.txt
 
+%config /etc/amebaC3.conf
 %config /etc/httpd/conf.d/amebaC3.conf
 
 %attr(0755,apache,apache) %dir /etc/nagios/amebaC3
@@ -79,7 +83,7 @@ if [ "$1" = "0" ] ; then
 
 %{python_site}/%{name}
 %if "%{dist}" == ".el6"
-%{python_site}/%{name}-%{version}-py%{python_version}.egg-info
+%{python_site}/%{name}-1.1-py%{python_version}.egg-info
 %endif
 
 %attr(0755,root,root) %{_defaultdocdir}/%{name}/ameba_freshness_exceeded.sh

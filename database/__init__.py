@@ -7,44 +7,43 @@ import fs_backend , bdb_backend
 import time
 import os
 
-
 import ConfigParser
+
 
 configfile = "/etc/amebaC3.conf"
 
-config = ConfigParser.RawConfigParser()
-config.read( configfile )
 
-# NOTE : Write this as ConfigParser defaults ???
-dbroot = "/var/lib/amebaC3"
-dbname = "amebaC3"
-dbtype = "fs"
+def get ( cfgfile=configfile ) :
 
-if config.has_option( 'database' , 'dbroot' ) :
-    dbroot = config.get( 'database' , 'dbroot' )
-if config.has_option( 'database' , 'dbname' ) :
-    dbname = config.get( 'database' , 'dbname' )
-if config.has_option( 'database' , 'dbtype' ) :
-    dbtype = config.get( 'database' , 'dbtype' )
+    dbconfig = {
+        'root': "/var/lib/amebaC3" ,
+        'name': "amebaC3"
+        }
 
+    config = ConfigParser.RawConfigParser( dbconfig )
+    config.read( cfgfile )
 
-def get ( _type ) :
+    if config.has_section( 'database' ) :
+        dbconfig.update( dict( config.items( 'database' ) ) )
 
-    if not os.path.isdir( dbroot ) :
-        raise InternalError( "Directory %s does not exists" % dbroot )
+    if not dbconfig.has_key( 'type' ) :
+        raise InternalError( "No database type configured" )
+
+    if not os.path.isdir( dbconfig['root'] ) :
+        raise InternalError( "Directory %s does not exists" % dbconfig['root'] )
 
     #FIXME : Check for owner and permissions
 
-    if _type == "fs" :
-        return fs_backend.Database( dbroot , dbname )
-    elif _type == "bdb" :
-        return bdb_backend.Database( dbroot , dbname )
+    if dbconfig['type'] == "fs" :
+        return fs_backend.Database( dbconfig['root'] , dbconfig['name'] )
+    elif dbconfig['type'] == "bdb" :
+        return bdb_backend.Database( dbconfig['root'] , dbconfig['name'] )
 
-    raise InternalError( "Uknown database type '%s'" % _type )
+    raise InternalError( "Uknown database type '%s'" % dbconfig['type'] )
 
 
-def initialize ( db ) :
-
+def initialize ( cfgfile ) :
+    db = get( cfgfile )
     db.add_user ( "nagiosadmin" , { 'registration_by':'__init__' , 'password':"nagiosadmin" , 'group':"nagiosadmin" } )
     db.add_user ( "guest" , { 'registration_by':'__init__' , 'password':"*" } )
 
