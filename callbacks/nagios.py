@@ -52,15 +52,11 @@ group_template = """define hostgroup{
 """
 
 
-services_list = {}
-services_list['ping'] = { 'template':"local-service" , 'check_command':"check_ping!100.0,20%!500.0,60%" }
-services_list['webserver'] = { 'template':"local-service" , 'check_command':"check_http" }
-
 service_template = """define service{
         use			%(template)s
         host_name		%(hostname)s
         service_description	%(service)s
-        check_command		%(check_command)s
+        check_command		%(command)s
         }
 """
 
@@ -89,6 +85,18 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback , AbstractNagios ) :
 
     name = callback_name
 
+    def __init__ ( self ) :
+        self.services = {}
+        if config.has_key( 'services' ) :
+            for service in config['services'].split() :
+                serv = {}
+                if config.has_key( 'service-template' ) :
+                    serv['template'] = config['service-template']
+                if not amebaC3_config.has_section( service ) :
+                    raise Exception( "Service '%s' not present on configuration" % service )
+                serv.update( dict( amebaC3_config.items(service) ) )
+                self.services[service] = serv
+
     def run ( self , uuid , dbvalues ) :
 
         _dbvalues = { 'uuid':uuid ,'extra':''}
@@ -104,8 +112,10 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback , AbstractNagios ) :
 
         if _dbvalues.get( 'services' ) :
             for service in _dbvalues['services'].split(',') :
-                services_list[service]['service'] = service
-                self.write_conf( "%s-%s" % ( uuid , service ) , service_template , _dbvalues , services_list[service] )
+                if not self.services.has_key(service) :
+                    raise Exception( "No service '%s' known to the server" % service )
+                self.services[service]['service'] = service
+                self.write_conf( "%s-%s" % ( uuid , service ) , service_template , _dbvalues , self.services[service] )
 
         if config['restart_allowed'] :
             self.send_command( "RESTART_PROGRAM" )
