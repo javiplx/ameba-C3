@@ -63,7 +63,10 @@ def handler ( req ) :
 
     try :
         dbvalues = db.add_node( args , req )
-        callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )
+        messages = callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )
+        if messages :
+            error_msg.extend( messages )
+            map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_WARNING ) , messages )
     except database.KeyExists , ex :
         dbvalues = db.get_node( args['UUID'] )
         if dbvalues['hostname'] == args['HOSTNAME'] :
@@ -72,7 +75,10 @@ def handler ( req ) :
             map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_INFO ) , error_msg )
             try :
                 db.update_node( dbvalues , args , req )
-                callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )
+                messages = callbacks.run_stage( "register" , req , ( args['UUID'] , dbvalues ) )
+                if messages :
+                    error_msg.extend( messages )
+                    map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_WARNING ) , messages )
             except Exception , ex :
                 error_msg.append( "Exception while updating record : %s" % ex )
         else :

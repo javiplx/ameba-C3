@@ -44,10 +44,11 @@ def register ( item ) :
 
 
 def run_stage ( stage_name , request , arglist ) :
+    messages = []
     if stage_name not in __callbacks__.keys() :
         raise Exception( "Unknown stage '%s'" % stage_name )
     if not __callbacks__[ stage_name ] :
-        request.log_error( "Empty stage '%s'" % stage_name )
+        messages.append( "Empty stage '%s'" % stage_name )
         return
     enabled = request.get_options().get( 'AmebaC3_callbacks' , "" ).split()
     for cb_name in __callbacks__[ stage_name ] :
@@ -56,7 +57,8 @@ def run_stage ( stage_name , request , arglist ) :
           if not enabled or cb.name in enabled :
             apply( cb.run , arglist )
         except Exception , ex :
-            request.log_error( "Exception : %s" % ex )
+            messages.append( str(ex) )
+    return messages
 
 
 for path in __path__ :
