@@ -17,10 +17,11 @@ callback_name = "cobbler"
 import xmlrpclib
 
 
-# Take values from configuration file
-cobbler_server = "http://localhost/cobbler_api"
-cobbler_user = "admin"
-cobbler_pass = "admin"
+config = {
+    'server': "http://localhost/cobbler_api" ,
+    'user': "admin" ,
+    'pass': "admin"
+    }
 
 
 class CobblerAddHost ( __baseclass.AbstractRegisterCallback ) :
@@ -29,8 +30,8 @@ class CobblerAddHost ( __baseclass.AbstractRegisterCallback ) :
 
     def run ( self , uuid , dbvalues ) :
 
-        conn = xmlrpclib.ServerProxy( cobbler_server )
-        token = conn.login( cobbler_user , cobbler_pass )
+        conn = xmlrpclib.ServerProxy( config['server'] )
+        token = conn.login( config['user'] , config['pass'] )
 
         if conn.get_distro( dbvalues["distro"] ) == "~" :
             itemdistro = conn.new_distro( token )
