@@ -50,11 +50,9 @@ def run_stage ( stage_name , request , arglist ) :
     if not __callbacks__[ stage_name ] :
         messages.append( "Empty stage '%s'" % stage_name )
         return
-    enabled = request.get_options().get( 'AmebaC3_callbacks' , "" ).split()
     for cb_name in __callbacks__[ stage_name ] :
         cb = cb_name()
         try :
-          if not enabled or cb.name in enabled :
             apply( cb.run , arglist )
         except Exception , ex :
             messages.append( str(ex) )

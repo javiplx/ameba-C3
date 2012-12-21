@@ -17,7 +17,7 @@ def get ( cfgfile=configfile ) :
 
     dbconfig = {
         'root': "/var/lib/amebaC3" ,
-        'name': "amebaC3-fs"
+        'name': "amebaC3"
         }
 
     config = ConfigParser.RawConfigParser( dbconfig )
