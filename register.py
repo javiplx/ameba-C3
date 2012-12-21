@@ -79,13 +79,26 @@ def handler ( req ) :
                 if messages :
                     error_msg.extend( messages )
                     map( lambda x : req.log_error( "register handler : %s" % x , apache.APLOG_WARNING ) , messages )
+            except database.C3DBException , ex :
+                msg = "Database exception '%s' while updating %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] )
+                req.log_error( "register handler : %s" % msg , apache.APLOG_EMERG )
+                req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+                return apache.OK
             except Exception , ex :
-                error_msg.append( "Exception while updating record : %s" % ex )
+                msg = "Unexpected exception '%s' while updating %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] )
+                req.log_error( "register handler : %s" % msg , apache.APLOG_EMERG )
+                req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+                return apache.OK
         else :
             error_msg.append( "UUID owned by '%s'" % dbvalues['hostname'] )
             map( lambda x : req.log_error( "register handler : %s" % x ) , error_msg )
             req.status = apache.HTTP_BAD_REQUEST 
     except database.C3DBException , ex :
+        msg = "Database exception '%s' while adding node %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] )
+        req.log_error( "register handler : %s" % msg , apache.APLOG_EMERG )
+        req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+        return apache.OK
+    except Exception , ex :
         msg = "Unexpected exception '%s' while adding node %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] )
         req.log_error( "register handler : %s" % msg , apache.APLOG_EMERG )
         req.status = apache.HTTP_INTERNAL_SERVER_ERROR
