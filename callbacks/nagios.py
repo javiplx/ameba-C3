@@ -17,13 +17,12 @@ callback_name = "nagios"
 import time
 import os
 
-restart_allowed = True
 
-# Take values also from configuration file
-cfg_dir = "/etc/nagios/amebaC3"
-commandfile = "/var/spool/nagios/cmd/nagios.cmd"
-
-stats_url = "http://r26936.ovh.net/stats"
+config = {
+    'restart_allowed': True ,
+    'cfg_dir': "/etc/nagios/amebaC3" ,
+    'commandfile': "/var/spool/nagios/cmd/nagios.cmd"
+    }
 
 node_template = """define host{
         use                     ameba-node
@@ -66,25 +65,27 @@ service_template = """define service{
 """
 
 
-def send_command ( command , hostname=None , msg=None ) :
-    fd = open( commandfile , 'a' )
-    if hostname or msg :
-        fd.write( "[%lu] %s;%s;%s\n" % ( time.time() , command , hostname , msg ) )
-    else :
-        fd.write( "[%lu] %s\n" % ( time.time() , command ) )
-    fd.close()
+class AbstractNagios :
 
-# FIXME : Permissions
-def write_conf ( filename , template , values , extra=None ) :
-    name = os.path.join( cfg_dir , "%s.cfg" % filename )
-    if extra :
-        values.update( extra )
-    fd = open( name , 'w' )
-    fd.write( template % values )
-    fd.close()
+    def send_command ( self , command , hostname=None , msg=None ) :
+        fd = open( config['commandfile'] , 'a' )
+        if hostname or msg :
+            fd.write( "[%lu] %s;%s;%s\n" % ( time.time() , command , hostname , msg ) )
+        else :
+            fd.write( "[%lu] %s\n" % ( time.time() , command ) )
+        fd.close()
+
+    # FIXME : Permissions
+    def write_conf ( self , filename , template , values , extra=None ) :
+        name = os.path.join( config['cfg_dir'] , "%s.cfg" % filename )
+        if extra :
+            values.update( extra )
+        fd = open( name , 'w' )
+        fd.write( template % values )
+        fd.close()
 
 
-class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
+class NagiosAddHost ( __baseclass.AbstractRegisterCallback , AbstractNagios ) :
 
     name = callback_name
 
@@ -93,32 +94,32 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback ) :
         _dbvalues = { 'uuid':uuid ,'extra':''}
         _dbvalues.update( dbvalues )
 
-        if dbvalues.has_key( 'metrics' ) :
-            _dbvalues['extra'] = "notes_url     %s/%s\n        " % ( stats_url , _dbvalues['hostname'].split(".",1)[0] )
+        if dbvalues.has_key( 'metrics' ) and config.has_key( 'metrics_url' ) :
+            _dbvalues['extra'] = "notes_url     %s/%s\n        " % ( config['metrics_url'] , _dbvalues['hostname'].split(".",1)[0] )
 
         # FIXME : Exception if exists?
-        write_conf( uuid , node_template , _dbvalues )
+        self.write_conf( uuid , node_template , _dbvalues )
 
-        write_conf( _dbvalues['distro'].replace("/"," ") , group_template , _dbvalues )
+        self.write_conf( _dbvalues['distro'].replace("/"," ") , group_template , _dbvalues )
 
         if _dbvalues.get( 'services' ) :
             for service in _dbvalues['services'].split(',') :
                 services_list[service]['service'] = service
-                write_conf( "%s-%s" % ( uuid , service ) , service_template , _dbvalues , services_list[service] )
+                self.write_conf( "%s-%s" % ( uuid , service ) , service_template , _dbvalues , services_list[service] )
 
-        if restart_allowed :
-            send_command( "RESTART_PROGRAM" )
+        if config['restart_allowed'] :
+            self.send_command( "RESTART_PROGRAM" )
 
 
-class NagiosHostUpdate ( __baseclass.AbstractAliveCallback ) :
+class NagiosHostUpdate ( __baseclass.AbstractAliveCallback , AbstractNagios ) :
 
     name = callback_name
 
     def run ( self , sess ) :
-        send_command( "PROCESS_HOST_CHECK_RESULT" , sess['HOSTNAME'] , "0;Ameba C3 - Logged in" )
+        self.send_command( "PROCESS_HOST_CHECK_RESULT" , sess['HOSTNAME'] , "0;Ameba C3 - Logged in" )
 
 
-class NagiosServiceUpdate ( __baseclass.AbstractUpdateCallback ) :
+class NagiosServiceUpdate ( __baseclass.AbstractUpdateCallback , AbstractNagios ) :
 
     name = callback_name
 
@@ -129,5 +130,5 @@ class NagiosServiceUpdate ( __baseclass.AbstractUpdateCallback ) :
             msg = "ameba updater;1;Ameba C3 - Updates for packages available"
         else :
             msg = "ameba updater;2;Ameba C3 - Failed update"
-        send_command( "PROCESS_SERVICE_CHECK_RESULT" , sess['HOSTNAME'] , msg )
+        self.send_command( "PROCESS_SERVICE_CHECK_RESULT" , sess['HOSTNAME'] , msg )
 
