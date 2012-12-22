@@ -65,6 +65,8 @@ if [ "$1" = "1" ] ; then
 
 %preun
 
+PLUGINS_DIR=$( dirname `rpm -ql nagios-plugins | grep 'utils.sh$'` )
+
 if [ "$1" = "0" ] ; then
   rm -f ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
   fi
