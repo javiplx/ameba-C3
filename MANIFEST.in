@@ -8,3 +8,5 @@ include deployment.txt
 include debian/changelog
 include debian/control
 include debian/rules
+include debian/postinst
+include debian/prerm

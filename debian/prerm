@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+
+    remove)
+
+        PLUGINS_DIR=$( dirname `rpm -ql nagios-plugins | grep 'utils.sh$'` )
+        rm -f ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
+
+        ;;
+
+    esac
+

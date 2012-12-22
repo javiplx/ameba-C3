@@ -7,6 +7,6 @@ Standards-Version: 3.6.1
 
 Package: amebac3
 Architecture: all
-Depends: apache2.2-common
-Recommends: nagios3
+Depends: apache2.2-common , libapache2-mod-python
+Recommends: nagios , nagios-plugins-basic , rrdUtils ( >= 5.5 )
 Description: AmebaC3 server

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+
+    configure)
+
+        PLUGINS_DIR=$( dirname `dpkg -L nagios-plugins-basic | grep 'utils.sh$'` )
+        cp /usr/share/doc/amebac3/ameba_freshness_exceeded.sh ${PLUGINS_DIR}
+        sed -i -e "s+%PLUGINS_DIR%+${PLUGINS_DIR}+" ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
+
+        ;;
+
+    *)
+        ;;
+
+    esac
+
