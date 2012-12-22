@@ -2,7 +2,7 @@
 
 Summary: AmebaC3 server
 Name: amebaC3
-Version: 1.0.99
+Version: 1.1
 Release: 1%{dist}
 Source: %{name}-%{version}.tar.gz
 Patch: rhel62.patch
@@ -85,7 +85,7 @@ if [ "$1" = "0" ] ; then
 
 %{python_site}/%{name}
 %if "%{dist}" == ".el6"
-%{python_site}/%{name}-1.1-py%{python_version}.egg-info
+%{python_site}/%{name}-%{version}-py%{python_version}.egg-info
 %endif
 
 %attr(0755,root,root) %{_defaultdocdir}/%{name}/ameba_freshness_exceeded.sh

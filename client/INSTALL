@@ -18,3 +18,7 @@ Quick Start
     Add pulldaemon section to /etc/aupd.conf defining check-interval
     Install ameba-updater initscript
 
+En openwrt, el cron es
+/bin/ameba-updater.sh -w 60 -c pull
+[donde el -c debiera ser opcional]
+

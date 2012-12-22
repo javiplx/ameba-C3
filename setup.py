@@ -23,7 +23,6 @@ setup(
 	url = "http://wiki.github.com/javiplx/ameba-C3" ,
 	package_dir = { 'amebaC3':"" } ,
 	packages = [ "amebaC3" , "amebaC3.callbacks" , "amebaC3.database" ] ,
-#	package_data = { 'amebaC3': [ "amebaC3.conf" ] } ,
 	license = "GPLv2"
 	)
 

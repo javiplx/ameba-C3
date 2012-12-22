@@ -1,0 +1,22 @@
+
+Version 1.1
+-----------
+
+* Allow update of registered systems (fs backend only)
+* Configuration moved to a single external file
+* Available callbacks for :
+  - nagios - services to be monitored
+  - stats-collector - metrics to be collected
+  - cobbler
+* Improved documentation
+* Include packaging for rpm and dpkg formats
+
+
+Version 1.0
+-----------
+
+* Register systems
+* Apache authentication module for systems and users
+* Keep track of system aliveness using nagios
+* Two filesystem backends (filesystem and berkeley DB)
+
