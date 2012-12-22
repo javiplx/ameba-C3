@@ -76,7 +76,6 @@ if [ "$1" = "0" ] ; then
 %files
 %defattr(0644,root,root,0755)
 %doc INSTALL license.txt
-%doc deployment.txt
 
 %config /etc/amebaC3.conf
 %config /etc/httpd/conf.d/amebaC3.conf

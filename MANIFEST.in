@@ -4,7 +4,6 @@ include callbacks/amebaC3_templates.cfg
 include callbacks/ameba_freshness_exceeded.sh
 include amebaC3_sample.conf
 include amebaC3_httpd_sample.conf
-include deployment.txt
 include debian/changelog
 include debian/control
 include debian/rules

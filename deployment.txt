@@ -1,9 +1,0 @@
-
-- Install the modules
-- Create database root with proper permisions
-- Configure register location
-
-Optional: (actualy not so much)
-- Initialize as web user (su - apache -c "python -c 'import amebaC3.database ; amebaC3.database.initialize()'" )
-- Configure nagios
-
