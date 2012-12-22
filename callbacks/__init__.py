@@ -28,8 +28,12 @@ configfile = "/etc/amebaC3.conf"
 config = ConfigParser.RawConfigParser()
 config.read( configfile )
 
-if config.has_option( 'callbacks' , 'enabled' ) :
-    __enabled__.extend( config.get( 'callbacks' , 'enabled' ).split() )
+process_callbacks = True
+if config.has_option( 'callbacks' , 'enable' ) :
+    process_callbacks = config.getboolean( 'callbacks' , 'enable' )
+
+if config.has_option( 'callbacks' , 'active' ) :
+    __enabled__.extend( config.get( 'callbacks' , 'active' ).split() )
 
 
 def register ( item ) :
@@ -64,7 +68,8 @@ for path in __path__ :
         if modname.endswith(".py") and not modname.startswith("_") :
             __all__.append( modname[:-3] )
 
-for modname in __all__ :
+if process_callbacks :
+  for modname in __all__ :
     module = __import__( modname , globals() )
     if config.has_section( module.callback_name ) :
         module.amebaC3_config = config
