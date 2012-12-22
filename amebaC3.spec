@@ -57,11 +57,8 @@ rm -rf %{buildroot}
 %post
 
 PLUGINS_DIR=$( dirname `rpm -ql nagios-plugins | grep 'utils.sh$'` )
-
-if [ "$1" = "1" ] ; then
-  cp %{_defaultdocdir}/%{name}/ameba_freshness_exceeded.sh ${PLUGINS_DIR}
-  sed -i -e "s+%PLUGINS_DIR%+${PLUGINS_DIR}+" ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
-  fi
+cp %{_defaultdocdir}/%{name}/ameba_freshness_exceeded.sh ${PLUGINS_DIR}
+sed -i -e "s+%PLUGINS_DIR%+${PLUGINS_DIR}+" ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
 
 %preun
 
