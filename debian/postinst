@@ -10,6 +10,10 @@ case "$1" in
         cp /usr/share/doc/amebac3/ameba_freshness_exceeded.sh ${PLUGINS_DIR}
         sed -i -e "s+%PLUGINS_DIR%+${PLUGINS_DIR}+" ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
 
+        if [ ! -f /var/lib/amebaC3/amebaC3/admin ] ; then
+            python -c 'import amebaC3.database ; amebaC3.database.initialize()'
+            fi
+
         ;;
 
     *)

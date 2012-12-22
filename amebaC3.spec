@@ -60,6 +60,10 @@ PLUGINS_DIR=$( dirname `rpm -ql nagios-plugins | grep 'utils.sh$'` )
 cp %{_defaultdocdir}/%{name}/ameba_freshness_exceeded.sh ${PLUGINS_DIR}
 sed -i -e "s+%PLUGINS_DIR%+${PLUGINS_DIR}+" ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
 
+if [ "$1" = "1" ] ; then
+  python -c 'import amebaC3.database ; amebaC3.database.initialize()'
+  fi
+
 %preun
 
 PLUGINS_DIR=$( dirname `rpm -ql nagios-plugins | grep 'utils.sh$'` )
