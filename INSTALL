@@ -1,12 +1,31 @@
 
+Unpack the source, running
+ ./setup.py install
 
-Copy the apache configuration in a proper location
+The python module uuid is required to enable automatic UUID creation at
+the server
 
+Copy the sample configuration into /etc/amebaC3.conf
+
+Copy the apache configuration in a proper location. This is required to
+enable the amebaC3 locations for register and update
 
 Create the db root directory, with permissions for apache user. Minimal
 required configuration is a database section on main configuration file,
 with keyword 'type' for the database backend (fs or bdb)
+Initialize the database running
+ python -c 'import amebaC3.database ; amebaC3.database.initialize()'
 
+
+callbacks
+---------
+
+Some of the callbacks require specific configuration and setup. To disable
+all callbacks, set enable to false in the main configuration file
+
+
+NAGIOS CALLBACK
+===============
 
 Create the nagios directory, with permissions for apache user. Add that
 directory to the nagios configuration file with a cfg_dir directive, and
@@ -16,8 +35,21 @@ If either the chosen directory for nagios configs or the nagios external
 commands file are not the standar ones, they must be included in the main
 configuration nagios section (keywords cfg_dir and commandfile)
 
+services
+--------
 
-Set proper authentication to access nagios, and add required nagios users to database
+Nagios services available for registration must be listed in the services
+entry at the nagios configuration section. Each individual service needs
+a configuration section to define the template and the command to check,
+although a default template can be defined at the nagios section using
+the keyword service-template
+
+authentication
+--------------
+
+The amebaC3 database can be used also to define users, that can be enabled
+for the nagios web location. This requires to enable authentication in
+nagios cgi configuration (uncommenting standard entries should be enough)
 
 <Directory /usr/lib/nagios/cgi-bin/>
    AuthType Basic
@@ -32,4 +64,11 @@ Set proper authentication to access nagios, and add required nagios users to dat
    PythonAuthenHandler amebaC3.login
    Require valid-user
 </Directory>
+
+
+COBBLER CALLBACK
+================
+
+The cobbler callback requires valid credentials and xmlrpc url on the
+main configuration file
 
