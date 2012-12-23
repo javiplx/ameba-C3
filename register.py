@@ -91,7 +91,7 @@ def handler ( req ) :
                 req.status = apache.HTTP_INTERNAL_SERVER_ERROR
                 return apache.OK
             except Exception , ex :
-                msg = "Unexpected exception '%s' while updating %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] )
+                msg = "Unexpected exception '%s' while updating %s with %s" % ( ex , args['HOSTNAME'] , args['UUID'] )
                 req.log_error( "register handler : %s" % msg , apache.APLOG_EMERG )
                 req.status = apache.HTTP_INTERNAL_SERVER_ERROR
                 return apache.OK
@@ -105,7 +105,7 @@ def handler ( req ) :
         req.status = apache.HTTP_INTERNAL_SERVER_ERROR
         return apache.OK
     except Exception , ex :
-        msg = "Unexpected exception '%s' while adding node %s with %s" % ( ex.type , args['HOSTNAME'] , args['UUID'] )
+        msg = "Unexpected exception '%s' while adding node %s with %s" % ( ex , args['HOSTNAME'] , args['UUID'] )
         req.log_error( "register handler : %s" % msg , apache.APLOG_EMERG )
         req.status = apache.HTTP_INTERNAL_SERVER_ERROR
         return apache.OK
