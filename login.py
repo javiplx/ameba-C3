@@ -57,7 +57,12 @@ def authenhandler ( req ) :
 
         # NOTE : nagios http configuration will not go through response handler
         if type == "Basic" :
-            db = database.get()
+            try :
+                db = database.get()
+            except database.C3DBException , ex :
+                req.log_error( "authenhandler : exception '%s' while accessing database" % ex.type , apache.APLOG_EMERG )
+                req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+                return apache.OK
             if not db.check_user_password( req.user , req.get_basic_auth_pw() ) :
                 db.close()
                 req.log_error( "authenhandler : Wrong password for user %s" % req.user )
@@ -79,7 +84,12 @@ def authenhandler ( req ) :
                 return apache.DONE
 
             req.user = uuid
-            db = database.get()
+            try :
+                db = database.get()
+            except database.C3DBException , ex :
+                req.log_error( "authenhandler : exception '%s' while accessing database" % ex.type , apache.APLOG_EMERG )
+                req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+                return apache.OK
             node = db.get_node( uuid )
             db.close()
             if not node :
@@ -151,9 +161,14 @@ def authenhandler ( req ) :
 def authzhandler ( req ) :
 
     # FIXME : use a serialezed node on apache notes instead of reopening the database
-    db = database.get()
-    node = db.get_node( req.user )
-    db.close()
+    try :
+        db = database.get()
+        node = db.get_node( req.user )
+        db.close()
+    except database.C3DBException , ex :
+        req.log_error( "authzhandler : exception '%s' while accessing database" % ex.type , apache.APLOG_EMERG )
+        req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+        return apache.OK
 
     if not node :
         req.log_error( "authzhandler : stored session for nonexisting node %s" % req.user , apache.APLOG_EMERG )

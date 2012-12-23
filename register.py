@@ -47,7 +47,13 @@ def handler ( req ) :
 
     error_msg = []
 
-    db = database.get()
+    try :
+        db = database.get()
+    except database.C3DBException , ex :
+        msg = "Exception '%s' while accessing database" % ex.type
+        req.log_error( "register handler : %s" % msg , apache.APLOG_EMERG )
+        req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+        return apache.OK
 
     if args['UUID'] == "__REQUEST__" :
         try :
