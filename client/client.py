@@ -118,6 +118,10 @@ def loginout ( url , uuid , failed=False ) :
         logger.error( "Login failed" )
         return False
 
+    if delay : 
+        logger.info( "sleeping %s secs until session gets active" % delay )
+        time.sleep( delay )
+
     return logout ( url , sessid , failed )
 
 
@@ -134,8 +138,7 @@ def pull ( url , uuid , cmds , avail_pkgs_retcode ) :
         return False
 
     if delay : 
-        # NOTE : this message will be reported along subsequent errors
-        logger.warning( "sleping %s secs until session gets active" % delay )
+        logger.info( "sleeping %s secs until session gets active" % delay )
         time.sleep( delay )
 
     ret = False
