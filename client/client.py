@@ -33,6 +33,10 @@ def register ( url , data ) :
     except urllib2.HTTPError , res :
         logger.error( res.msg )
         map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
+    except urllib2.URLError , ex :
+        logger.error( "%s : %s" % ( ex.reason[0] , ex.reason[1] ) )
+    except Exception , ex :
+        logger.error( 'Unexpected exception %s' % ex )
     else :
         firstline = res.readline().rstrip('\n')
         if firstline == "OK" :
@@ -66,6 +70,10 @@ def login ( url , uuid ) :
     except urllib2.HTTPError , res :
         logger.error( res.msg )
         map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
+    except urllib2.URLError , ex :
+        logger.error( "%s : %s" % ( ex.reason[0] , ex.reason[1] ) )
+    except Exception , ex :
+        logger.error( 'Unexpected exception %s' % ex )
     else :
         firstline = res.readline().rstrip('\n').split()
         if len(firstline) == 2 and firstline[0] == "ID" :
@@ -96,6 +104,10 @@ def logout ( url , sessid , failed=False ) :
     except urllib2.HTTPError , res :
         logger.error( res.msg )
         map( logger.error , map( lambda x : x.rstrip('\n') , res.readlines() ) )
+    except urllib2.URLError , ex :
+        logger.error( "%s : %s" % ( ex.reason[0] , ex.reason[1] ) )
+    except Exception , ex :
+        logger.error( 'Unexpected exception %s' % ex )
     else :
         firstline = res.readline().rstrip('\n').split()
         if len(firstline) == 2 and firstline[0] == "ID" :
