@@ -3,7 +3,7 @@
 Summary: AmebaC3 update agent
 Name: amebaC3_client
 Version: 1.4.1
-Release: 1%{dist}
+Release: 2%{dist}
 Source: %{name}-%{version}.tar.gz
 License: GPLv2
 Group: System/Management
@@ -75,7 +75,7 @@ if [ "$1" = "0" ] ; then
 %attr(0755,root,root) /etc/init.d/ameba-updater
 
 %{python_site}/%{name}
-%if "%{dist}" == "el6"
+%if "%{dist}" == ".el6"
 %{python_site}/%{name}-%{version}-py%{python_version}.egg-info
 %endif
 
