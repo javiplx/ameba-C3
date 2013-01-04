@@ -103,7 +103,7 @@ class NagiosAddHost ( __baseclass.AbstractRegisterCallback , AbstractNagios ) :
         _dbvalues.update( dbvalues )
 
         if dbvalues.has_key( 'metrics' ) and config.has_key( 'metrics_url' ) :
-            _dbvalues['extra'] = "notes_url     %s/%s\n        " % ( config['metrics_url'] , _dbvalues['hostname'].split(".",1)[0] )
+            _dbvalues['extra'] = "notes_url     %s/%s\n        " % ( config['metrics_url'] , _dbvalues['hostname'] )
 
         # FIXME : Exception if exists?
         self.write_conf( uuid , node_template , _dbvalues )
