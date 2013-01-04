@@ -226,69 +226,6 @@ def check_configuration ( check_uuid=True ) :
     return True
 
 
-def login ( config , options , args ) :
-
-    if args :
-        logger.error( "Too many arguments" )
-        parser.print_help()
-        return False
-
-    if not check_configuration() :
-        return False
-
-    _url = config.get( 'global' , 'url' )
-    _uuid = config.get( 'global' , 'uuid' )
-
-    sessid , delay = amebaC3_client.client.login ( _url , _uuid )
-    if sessid :
-        print "session id : %s" % sessid
-        if delay :
-            print "activated in %s seconds" % delay
-
-    return True
-
-
-def logout ( config , options , args ) :
-
-    if args :
-        logger.error( "Too many arguments" )
-        parser.print_help()
-        return False
-
-    if not options.sessid :
-        logger.error( "Missing session identifier" )
-        parser.print_help()
-        return False
-
-    if not check_configuration( False ) :
-        return False
-
-    _url = config.get( 'global' , 'url' )
-
-    if amebaC3_client.client.logout ( _url , options.sessid ) :
-        logger.info( "Session closed : %s" % options.sessid )
-
-    return True
-
-
-def loginout ( config , options , args ) :
-
-    if args :
-        logger.error( "Too many arguments" )
-        parser.print_help()
-        return False
-
-    if not check_configuration() :
-        return False
-
-    _url = config.get( 'global' , 'url' )
-    _uuid = config.get( 'global' , 'uuid' )
-
-    amebaC3_client.client.loginout ( _url , _uuid )
-
-    return True
-
-
 import fcntl
 
 def get_lock ( filename="/tmp/aupd.lock" ) :
@@ -411,9 +348,6 @@ def pulldaemon ( config , options , args ) :
 
 command = { 'register':register ,
             'pull':pull ,
-            'logout':logout ,
-            'login':login ,
-            'loginout':loginout ,
             'pulldaemon':pulldaemon ,
             }
 
@@ -424,9 +358,6 @@ usage = """
 	%prog [--autogenerate|--requestuuid] [--distro distroname] [--metrics metric,...] [--services service,...] register [url [uuid] ]
 	%prog [--random-wait seconds] [--check-only|--force-upgrade] [--check-interval seconds] [--store] [--logfile filename] pulldaemon
 	%prog [--random-wait seconds] [--check-only|--force-upgrade] [--silent] pull
-	%prog login
-	%prog --sessid id logout
-	%prog loginout
 """
 
 version = "%%prog %s" % __version__
@@ -455,12 +386,6 @@ parser.add_option("--metrics", dest="metrics",
 
 parser.add_option("--services", dest="services",
         help="Services to be monitored")
-
-
-# logout options
-
-parser.add_option("--sessid", dest="sessid",
-        help="Set session ID")
 
 
 # pull/pulldaemon options
