@@ -64,12 +64,23 @@ if [ "$1" = "1" ] ; then
   python -c 'import amebaC3.database ; amebaC3.database.initialize()'
   fi
 
+/etc/init.d/httpd condrestart
+/etc/init.d/nagios reload
+
 %preun
 
 PLUGINS_DIR=$( dirname `rpm -ql nagios-plugins | grep 'utils.sh$'` )
 
 if [ "$1" = "0" ] ; then
   rm -f ${PLUGINS_DIR}/ameba_freshness_exceeded.sh
+  fi
+
+
+%postun
+
+if [ "$1" = "0" ] ; then
+  /etc/init.d/httpd condrestart
+  /etc/init.d/nagios reload
   fi
 
 
