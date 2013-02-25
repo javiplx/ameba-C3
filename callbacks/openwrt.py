@@ -49,7 +49,8 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
         if os.path.exists( nodesfile ) :
             doc = xml.dom.minidom.parse( nodesfile )
         else :
-            doc = xml.dom.minidom.parseString( '<network />' )
+            doc = xml.dom.minidom.Document()
+            doc.appendChild( doc.createElement( 'network' ) )
 
         for node in doc.getElementsByTagName('node') :
             if macaddr == node.getElementsByTagName('mac')[0].firstChild.nodeValue :
