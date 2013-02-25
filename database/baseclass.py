@@ -143,6 +143,9 @@ class Database :
         if args.has_key( 'SERVICES' ) :
             dbvalues[ "services" ] = args['SERVICES']
 
+        if args.has_key( 'MACADDRESS' ) :
+            dbvalues[ "macaddress" ] = args['MACADDRESS']
+
         if req :
             dbvalues[ "hostaddress" ] = req.get_remote_host()
             dbvalues[ "registration_date" ] = req.request_time
@@ -153,7 +156,8 @@ class Database :
                         "metrics" ,
                         "services" ,
                         "hostname" ,
-                        "hostaddress"
+                        "hostaddress" ,
+                        "macaddress"
                         )
 
         self.add_record( uuid , dbvalues , field_names )
@@ -196,6 +200,7 @@ class Database :
                         "services" ,
                         "hostname" ,
                         "hostaddress" ,
+                        "macaddress" ,
                         "modification_date"
                         )
 
