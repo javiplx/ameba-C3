@@ -41,6 +41,10 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
     name = callback_name
 
     def run ( self , uuid , dbvalues ) :
+
+        if not dbvalues.has_key( 'macaddress' ) :
+            raise Exception( "openwrt : missing node mac address" )
+
         macaddr = dbvalues['macaddress']
         # Create nodesfile if does not exists
         macfile = os.path.join( datadir , "data/mac2net" , "%s.txt" % base64.encodestring(macaddr)[:-1] )
@@ -54,7 +58,7 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
 
         for node in doc.getElementsByTagName('node') :
             if macaddr == node.getElementsByTagName('mac')[0].firstChild.nodeValue :
-                print "Node %s already registered" % macaddr
+                raise Exception( "openwrt : mac address already registered" )
         else :
             newnode = doc.createElement( 'node' )
             doc.documentElement.appendChild( newnode )
