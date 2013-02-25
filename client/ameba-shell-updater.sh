@@ -12,7 +12,7 @@
 # General Public License for more details.
 
 
-version="0.9.4"
+version="0.9.5"
 
 retcode=2
 
@@ -21,6 +21,7 @@ random_wait="300"
 pull_mode="check"
 metrics=""
 services=""
+interface="eth0"
 
 progname=$0
 
@@ -29,7 +30,7 @@ print_usage () {
     shift
     test $# -gt 0 && echo "ERROR : $*"
 cat <<EOF
-${prog} [-r] [-d distroname] [-m metric1,metric2,...] [-s service1,service2,...] register url [uuid]
+${prog} [-r] [-i interface] [-d distroname] [-m metric1,metric2,...] [-s service1,service2,...] register url [uuid]
 ${prog} [-w seconds] [-c|-f] pull
 ${prog} login
 ${prog} loginout
@@ -59,9 +60,16 @@ guess_metrics() {
 }
 
 
-while getopts "hrd:w:m:cfs:" opt ; do
+while getopts "hri:d:w:m:cfs:" opt ; do
 
   case $opt in
+    i) /sbin/ifconfig ${OPTARG} > /dev/null 2>&1
+       if [ $? -eq 0 ] ; then
+         interface=${OPTARG}
+       else
+         echo "WARNING : interface ${OPTARG} not found"
+         fi
+       ;;
     d) test -n "${distroname}" -a "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
        distroname=${OPTARG}
        ;;
@@ -114,6 +122,8 @@ case $action in
     uuid=$2
     distroname=`echo $distroname | tr ' ' '_'`
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
+    macaddr=`/sbin/ifconfig ${interface} | | awk '/HWaddr/ { print $NF }'`
+    postdata="UUID=${uuid}&HOSTNAME=`uname -n`&MACADDRESS=${macaddr}"
     test -n "${metrics}" && postdata="${postdata}&METRICS=${metrics}"
     test -n "${services}" && postdata="${postdata}&SERVICES=${services}"
     wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}" 2> /dev/null
