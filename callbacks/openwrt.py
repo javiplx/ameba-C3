@@ -65,11 +65,19 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
             doc = xml.dom.minidom.Document()
             doc.appendChild( doc.createElement( 'network' ) )
 
-        valuesdict = { 'name':'hostname' , 'notes':'notes' , 'ip':'hostaddress' , 'lat':'lat' , 'long':'lon' }
+        valuesdict = { 'name':'hostname' , 'notes':'notes' , 'ip':'hostaddress' , 'lat':'lat' , 'lng':'lon' }
 
         for node in doc.getElementsByTagName('node') :
             if macaddr == node.getElementsByTagName('mac')[0].firstChild.nodeValue :
-                raise Exception( "openwrt : mac address already registered" )
+                for k,v in valuesdict.iteritems() :
+                    if dbvalues.has_key(v) :
+                        tag = node.getElementsByTagName(k)[0]
+                        if tag.firstChild :
+                            print dir(tag.firstChild)
+                            tag.firstChild.nodeValue = dbvalues[v]
+                        else :
+                            tag.appendChild( doc.createTextNode( dbvalues[v] ) )
+                break
         else :
             newnode = doc.createElement( 'node' )
             doc.documentElement.appendChild( newnode )
@@ -77,7 +85,8 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
             # IP is not an input param, but assigned by the dashboard checkin
             for k,v in valuesdict.iteritems() :
                 addChild( newnode , k , dbvalues.get(v) )
-            doc.writexml( open( nodesfile , 'w' ) )
+
+        doc.writexml( open( nodesfile , 'w' ) )
 
         if not os.path.isfile( macfile ) :
             fd = open( macfile , 'w' )
