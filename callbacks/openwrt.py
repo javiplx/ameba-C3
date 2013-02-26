@@ -45,10 +45,19 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
         if not dbvalues.has_key( 'macaddress' ) :
             raise Exception( "openwrt : missing node mac address" )
 
+        if not dbvalues.has_key( 'networkname' ) :
+            # Use default network name
+            dbvalues['networkname'] = networkname
+
         macaddr = dbvalues['macaddress']
         # Create nodesfile if does not exists
         macfile = os.path.join( datadir , "data/mac2net" , "%s.txt" % base64.encodestring(macaddr)[:-1] )
-        # If macfile exists, check network
+        if os.path.isfile( macfile ) :
+            fd = open( macfile )
+            if fd.read() != dbvalues['networkname'] :
+                fd.close()
+                raise Exception( "openwrt : node is already assigned to a different network" )
+            fd.close()
 
         if os.path.exists( nodesfile ) :
             doc = xml.dom.minidom.parse( nodesfile )
@@ -70,6 +79,10 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
         # location:"(lat,lon)" or lat+lon
             addChild( newnode , 'lat' )
             addChild( newnode , 'long' )
-        # create macfile
             doc.writexml( open( nodesfile , 'w' ) )
+
+        if not os.path.isfile( macfile ) :
+            fd = open( macfile , 'w' )
+            fd.write( dbvalues['networkname'] )
+            fd.close()
 
