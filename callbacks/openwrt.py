@@ -65,20 +65,18 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
             doc = xml.dom.minidom.Document()
             doc.appendChild( doc.createElement( 'network' ) )
 
+        valuesdict = { 'name':'hostname' , 'notes':'notes' , 'ip':'hostaddress' , 'lat':'lat' , 'long':'lon' }
+
         for node in doc.getElementsByTagName('node') :
             if macaddr == node.getElementsByTagName('mac')[0].firstChild.nodeValue :
                 raise Exception( "openwrt : mac address already registered" )
         else :
             newnode = doc.createElement( 'node' )
             doc.documentElement.appendChild( newnode )
-            addChild( newnode , 'name' , dbvalues['hostname'] )
-            addChild( newnode , 'notes' )
             addChild( newnode , 'mac' , macaddr )
-        # IP is not a param, but assigned by the dashboard checkin
-            addChild( newnode , 'ip' , dbvalues['hostaddress'] )
-        # location:"(lat,lon)" or lat+lon
-            addChild( newnode , 'lat' )
-            addChild( newnode , 'long' )
+            # IP is not an input param, but assigned by the dashboard checkin
+            for k,v in valuesdict.iteritems() :
+                addChild( newnode , k , dbvalues.get(v) )
             doc.writexml( open( nodesfile , 'w' ) )
 
         if not os.path.isfile( macfile ) :
