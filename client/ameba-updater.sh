@@ -128,19 +128,24 @@ case $action in
     test -n "${services}" && postdata="${postdata}&SERVICES=${services}"
     wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}" 2> /dev/null
     if [ -s /tmp/aupd.response.$$ ] ; then
+     response=`head -1 /tmp/aupd.response.$$`
+     sed -i -e '1d' /tmp/aupd.response.$$
      if [ ${uuid} = "__REQUEST__" ] ; then
       uuid=`sed -n -e 's/^UUID //p' /tmp/aupd.response.$$`
-      response=`grep -v '^UUID' /tmp/aupd.response.$$`
-     else
-      response=`cat /tmp/aupd.response.$$`
+      sed -i -e '/^UUID / d' /tmp/aupd.response.$$
       fi
      if [ "${response}" = "OK" ] ; then
-      touch /etc/config/aupd
-      uci set aupd.main=global
+      if [ ! -f /etc/config/aupd ] ; then
+        touch /etc/config/aupd
+        uci set aupd.main=global
+        fi
       uci set aupd.main.url=${url}
       uci set aupd.main.uuid=${uuid}
       uci commit aupd
       retcode=0
+     else
+      echo "ERROR : failed registration"
+      cat /tmp/aupd.response.$$ && echo
       fi
      fi
     rm -f /tmp/aupd.response.$$
