@@ -51,7 +51,7 @@ class DashboardCheckin ( __baseclass.AbstractRegisterCallback ) :
 
         macaddr = dbvalues['macaddress']
         # Create nodesfile if does not exists
-        macfile = os.path.join( datadir , "data/mac2net" , "%s.txt" % base64.encodestring(macaddr)[:-1] )
+        macfile = os.path.join( datadir , "data/mac2net" , "%s.txt" % base64.b64encode(macaddr) )
         if os.path.isfile( macfile ) :
             fd = open( macfile )
             if fd.read() != dbvalues['networkname'] :
