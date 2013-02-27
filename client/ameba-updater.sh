@@ -122,8 +122,8 @@ case $action in
     uuid=$2
     distroname=`echo $distroname | tr ' ' '_'`
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
-    macaddr=`/sbin/ifconfig ${interface} | | awk '/HWaddr/ { print $NF }'`
-    postdata="UUID=${uuid}&HOSTNAME=`uname -n`&MACADDRESS=${macaddr}"
+    macaddr=`/sbin/ifconfig ${interface} | awk '/HWaddr/ { print $NF }'`
+    postdata="${postdata}&MACADDRESS=${macaddr}"
     test -n "${metrics}" && postdata="${postdata}&METRICS=${metrics}"
     test -n "${services}" && postdata="${postdata}&SERVICES=${services}"
     wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}" 2> /dev/null
