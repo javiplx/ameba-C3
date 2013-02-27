@@ -190,6 +190,9 @@ class Database :
             del services['']
             dbvalues[ "services" ] = ",".join( services.keys() )
 
+        if args.has_key( 'MACADDRESS' ) :
+            dbvalues[ "macaddress" ] = args['MACADDRESS']
+
         if req :
             dbvalues[ "hostaddress" ] = req.get_remote_host()
             dbvalues[ "modification_date" ] = req.request_time
