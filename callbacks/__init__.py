@@ -11,6 +11,12 @@
 # General Public License for more details.
 
 
+"""
+Individual callbacks report errors as exceptions, and the callback runner
+return them as list of string. These strings are sent back to the client
+as warnings and reported in the server logs.
+"""
+
 import __baseclass
 
 import types
