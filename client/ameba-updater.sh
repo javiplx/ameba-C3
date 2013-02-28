@@ -110,14 +110,13 @@ case $action in
   register)
     if [ -n "${requestuuid}" ] ; then
       if [ $# -eq 2 -a "$2" != "__REQUEST__" ] ; then
-        echo "ERROR : Unallowed request for UUID when a value is supplied on command line"
+        echo "WARNING : unallowed request for UUID when a value is supplied on command line"
         fi
       set -- $1 __REQUEST__
       fi
     if [ $# -ne 2 ] ; then
       echo "ERROR : register bad usage"
-      exit 1
-      fi
+    else
     url=$1
     uuid=$2
     distroname=`echo $distroname | tr ' ' '_'`
@@ -157,6 +156,7 @@ case $action in
       fi
      fi
     rm -f /tmp/aupd.response.$$
+    fi
     ;;
 
   login)
@@ -164,8 +164,11 @@ case $action in
       echo "ERROR : login bad usage"
       exit 1
       fi
-    url=`uci get aupd.main.url`
-    uuid=`uci get aupd.main.uuid`
+    url=`uci -q get aupd.main.url`
+    uuid=`uci -q get aupd.main.uuid`
+    if [ -z "${url}" -o -z "${uuid}" ] ; then
+     echo "ERROR : system not registered"
+    else
     response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
     if [ -n "${response}" ] ; then
      set -- `echo $response | head -1`
@@ -174,6 +177,7 @@ case $action in
       retcode=0
       fi
      fi
+    fi
     ;;
 
   loginout)
@@ -182,8 +186,11 @@ case $action in
       exit 1
       fi
     status=$1
-    url=`uci get aupd.main.url`
-    uuid=`uci get aupd.main.uuid`
+    url=`uci -q get aupd.main.url`
+    uuid=`uci -q get aupd.main.uuid`
+    if [ -z "${url}" -o -z "${uuid}" ] ; then
+     echo "ERROR : system not registered"
+    else
     response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
     if [ -n "${response}" ] ; then
      set -- `echo $response | head -1`
@@ -195,6 +202,7 @@ case $action in
         fi
       fi
      fi
+    fi
     ;;
 
   pull)
@@ -219,8 +227,11 @@ case $action in
         status="WARNING"
         fi
       fi
-    url=`uci get aupd.main.url`
-    uuid=`uci get aupd.main.uuid`
+    url=`uci -q get aupd.main.url`
+    uuid=`uci -q get aupd.main.uuid`
+    if [ -z "${url}" -o -z "${uuid}" ] ; then
+     echo "ERROR : system not registered"
+    else
     response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
     if [ -n "${response}" ] ; then
      set -- `echo $response | head -1`
@@ -232,6 +243,7 @@ case $action in
         fi
       fi
      fi
+    fi
     ;;
 
   *)
