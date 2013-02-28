@@ -38,13 +38,15 @@ EOF
 }
 
 
+. /etc/functions.sh
+
 guess_metrics() {
 
   config_load system
   cfg=`config_foreach echo stats`
 
   metrics=""
-  for metric in `uci get system.${cfg}.metric` ; do
+  for metric in `uci -q get system.${cfg}.metric` ; do
     case $metric in
       netdev)
          for ifname in `awk -F: 'NF>1 { print $1 }' /proc/net/dev | tr '.' '_'` ; do
@@ -100,9 +102,7 @@ if [ $# -eq 0 ] ; then
 eval action=\$$OPTIND
 test -n "${action}" && shift $OPTIND
 
-. /etc/functions.sh
-
-_wait=`uci get aupd.pulldaemon.random-wait 2> /dev/null`
+_wait=`uci -q get aupd.pulldaemon.random-wait`
 test -n ${_wait} && random_wait=${_wait}
 
 case $action in
@@ -141,6 +141,14 @@ case $action in
         fi
       uci set aupd.main.url=${url}
       uci set aupd.main.uuid=${uuid}
+      confmetrics=$(uci -q get aupd.main.metrics)
+      for metric in `echo ${metrics} | tr ',' ' ' ` ; do
+        list_contains confmetrics ${metric} || uci add_list aupd.main.metrics=${metric}
+        done
+      confservices=$(uci -q get aupd.main.services)
+      for service in `echo ${services} | tr ',' ' ' ` ; do
+        list_contains confservices ${service} || uci add_list aupd.main.services=${service}
+        done
       uci commit aupd
       retcode=0
      else
