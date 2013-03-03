@@ -12,7 +12,7 @@
 # General Public License for more details.
 
 
-version="0.9.4"
+version="1.4.1"
 
 retcode=2
 
@@ -21,6 +21,7 @@ random_wait="300"
 pull_mode="check"
 metrics=""
 services=""
+interface="eth0"
 
 progname=$0
 
@@ -29,7 +30,7 @@ print_usage () {
     shift
     test $# -gt 0 && echo "ERROR : $*"
 cat <<EOF
-${prog} [-r] [-d distroname] [-m metric1,metric2,...] [-s service1,service2,...] register url [uuid]
+${prog} [-r] [-i interface] [-d distroname] [-m metric1,metric2,...] [-s service1,service2,...] register url [uuid]
 ${prog} [-w seconds] [-c|-f] pull
 ${prog} login
 ${prog} loginout
@@ -37,13 +38,15 @@ EOF
 }
 
 
+. /etc/functions.sh
+
 guess_metrics() {
 
   config_load system
   cfg=`config_foreach echo stats`
 
   metrics=""
-  for metric in `uci get system.${cfg}.metric` ; do
+  for metric in `uci -q get system.${cfg}.metric` ; do
     case $metric in
       netdev)
          for ifname in `awk -F: 'NF>1 { print $1 }' /proc/net/dev | tr '.' '_'` ; do
@@ -59,9 +62,16 @@ guess_metrics() {
 }
 
 
-while getopts "hrd:w:m:cfs:" opt ; do
+while getopts "hri:d:w:m:cfs:" opt ; do
 
   case $opt in
+    i) /sbin/ifconfig ${OPTARG} > /dev/null 2>&1
+       if [ $? -eq 0 ] ; then
+         interface=${OPTARG}
+       else
+         echo "WARNING : interface ${OPTARG} not found"
+         fi
+       ;;
     d) test -n "${distroname}" -a "${distroname}" != "${OPTARG}" && echo "WARNING : Guessed distro name '${distroname}' differs from supplied on command line '${OPTARG}'"
        distroname=${OPTARG}
        ;;
@@ -92,9 +102,7 @@ if [ $# -eq 0 ] ; then
 eval action=\$$OPTIND
 test -n "${action}" && shift $OPTIND
 
-. /etc/functions.sh
-
-_wait=`uci get aupd.pulldaemon.random-wait 2> /dev/null`
+_wait=`uci -q get aupd.pulldaemon.random-wait`
 test -n ${_wait} && random_wait=${_wait}
 
 case $action in
@@ -102,38 +110,53 @@ case $action in
   register)
     if [ -n "${requestuuid}" ] ; then
       if [ $# -eq 2 -a "$2" != "__REQUEST__" ] ; then
-        echo "ERROR : Unallowed request for UUID when a value is supplied on command line"
+        echo "WARNING : unallowed request for UUID when a value is supplied on command line"
         fi
       set -- $1 __REQUEST__
       fi
     if [ $# -ne 2 ] ; then
       echo "ERROR : register bad usage"
-      exit 1
-      fi
+    else
     url=$1
     uuid=$2
     distroname=`echo $distroname | tr ' ' '_'`
     postdata="UUID=${uuid}&HOSTNAME=`uname -n`&DISTRO=${distroname}"
+    macaddr=`/sbin/ifconfig ${interface} | awk '/HWaddr/ { print $NF }'`
+    postdata="${postdata}&MACADDRESS=${macaddr}"
     test -n "${metrics}" && postdata="${postdata}&METRICS=${metrics}"
     test -n "${services}" && postdata="${postdata}&SERVICES=${services}"
     wget -q -U "AmebaC3-Agent/${version} (shell)" -O /tmp/aupd.response.$$ "${url}/register?${postdata}" 2> /dev/null
     if [ -s /tmp/aupd.response.$$ ] ; then
+     response=`head -1 /tmp/aupd.response.$$`
+     sed -i -e '1d' /tmp/aupd.response.$$
      if [ ${uuid} = "__REQUEST__" ] ; then
       uuid=`sed -n -e 's/^UUID //p' /tmp/aupd.response.$$`
-      response=`grep -v '^UUID' /tmp/aupd.response.$$`
-     else
-      response=`cat /tmp/aupd.response.$$`
+      sed -i -e '/^UUID / d' /tmp/aupd.response.$$
       fi
      if [ "${response}" = "OK" ] ; then
-      touch /etc/config/aupd
-      uci set aupd.main=global
+      if [ ! -f /etc/config/aupd ] ; then
+        touch /etc/config/aupd
+        uci set aupd.main=global
+        fi
       uci set aupd.main.url=${url}
       uci set aupd.main.uuid=${uuid}
+      confmetrics=$(uci -q get aupd.main.metrics)
+      for metric in `echo ${metrics} | tr ',' ' ' ` ; do
+        list_contains confmetrics ${metric} || uci add_list aupd.main.metrics=${metric}
+        done
+      confservices=$(uci -q get aupd.main.services)
+      for service in `echo ${services} | tr ',' ' ' ` ; do
+        list_contains confservices ${service} || uci add_list aupd.main.services=${service}
+        done
       uci commit aupd
       retcode=0
+     else
+      echo "ERROR : failed registration"
+      cat /tmp/aupd.response.$$ && echo
       fi
      fi
     rm -f /tmp/aupd.response.$$
+    fi
     ;;
 
   login)
@@ -141,8 +164,11 @@ case $action in
       echo "ERROR : login bad usage"
       exit 1
       fi
-    url=`uci get aupd.main.url`
-    uuid=`uci get aupd.main.uuid`
+    url=`uci -q get aupd.main.url`
+    uuid=`uci -q get aupd.main.uuid`
+    if [ -z "${url}" -o -z "${uuid}" ] ; then
+     echo "ERROR : system not registered"
+    else
     response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
     if [ -n "${response}" ] ; then
      set -- `echo $response | head -1`
@@ -151,6 +177,7 @@ case $action in
       retcode=0
       fi
      fi
+    fi
     ;;
 
   loginout)
@@ -159,8 +186,11 @@ case $action in
       exit 1
       fi
     status=$1
-    url=`uci get aupd.main.url`
-    uuid=`uci get aupd.main.uuid`
+    url=`uci -q get aupd.main.url`
+    uuid=`uci -q get aupd.main.uuid`
+    if [ -z "${url}" -o -z "${uuid}" ] ; then
+     echo "ERROR : system not registered"
+    else
     response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
     if [ -n "${response}" ] ; then
      set -- `echo $response | head -1`
@@ -172,6 +202,7 @@ case $action in
         fi
       fi
      fi
+    fi
     ;;
 
   pull)
@@ -196,8 +227,11 @@ case $action in
         status="WARNING"
         fi
       fi
-    url=`uci get aupd.main.url`
-    uuid=`uci get aupd.main.uuid`
+    url=`uci -q get aupd.main.url`
+    uuid=`uci -q get aupd.main.uuid`
+    if [ -z "${url}" -o -z "${uuid}" ] ; then
+     echo "ERROR : system not registered"
+    else
     response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
     if [ -n "${response}" ] ; then
      set -- `echo $response | head -1`
@@ -209,6 +243,7 @@ case $action in
         fi
       fi
      fi
+    fi
     ;;
 
   *)
