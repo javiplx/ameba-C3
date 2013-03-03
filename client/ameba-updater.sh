@@ -12,7 +12,7 @@
 # General Public License for more details.
 
 
-version="0.9.5"
+version="1.4.1"
 
 retcode=2
 
@@ -32,8 +32,6 @@ print_usage () {
 cat <<EOF
 ${prog} [-r] [-i interface] [-d distroname] [-m metric1,metric2,...] [-s service1,service2,...] register url [uuid]
 ${prog} [-w seconds] [-c|-f] pull
-${prog} login
-${prog} loginout
 EOF
 }
 
@@ -156,52 +154,6 @@ case $action in
       fi
      fi
     rm -f /tmp/aupd.response.$$
-    fi
-    ;;
-
-  login)
-    if [ $# -ne 0 ] ; then
-      echo "ERROR : login bad usage"
-      exit 1
-      fi
-    url=`uci -q get aupd.main.url`
-    uuid=`uci -q get aupd.main.uuid`
-    if [ -z "${url}" -o -z "${uuid}" ] ; then
-     echo "ERROR : system not registered"
-    else
-    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
-    if [ -n "${response}" ] ; then
-     set -- `echo $response | head -1`
-     if [ $# -eq 2 -a "$1" = "ID" ] ; then
-      sessid=$2
-      retcode=0
-      fi
-     fi
-    fi
-    ;;
-
-  loginout)
-    if [ $# -ne 1 ] ; then
-      echo "ERROR : loginout bad usage"
-      exit 1
-      fi
-    status=$1
-    url=`uci -q get aupd.main.url`
-    uuid=`uci -q get aupd.main.uuid`
-    if [ -z "${url}" -o -z "${uuid}" ] ; then
-     echo "ERROR : system not registered"
-    else
-    response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "Authorization: UUID ${uuid}" "${url}/login" 2> /dev/null`
-    if [ -n "${response}" ] ; then
-     set -- `echo $response | head -1`
-     if [ $# -eq 2 -a "$1" = "ID" ] ; then
-      sessid=$2
-      response=`wget -q -U "AmebaC3-Agent/${version} (shell)" -O - --header "X-AmebaStatus: ${status}" --header "Cookie: pysid=${sessid}" "${url}/logoff" 2> /dev/null`
-      if [ -n "${response}" ] ; then
-        retcode=0
-        fi
-      fi
-     fi
     fi
     ;;
 
